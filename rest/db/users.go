@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"github.com/huandu/go-sqlbuilder"
 )
 
@@ -67,7 +66,6 @@ func CreateUser(user *User, salt string, hash string) (err error) {
 	sb.InsertInto("users").Cols("name", "email", "access_level", "salt", "password").Values(user.Name, user.Email, user.AccessLevel, salt, hash).SQL("RETURNING id")
 
 	query, args := sb.Build()
-	fmt.Println(query)
 	return db.QueryRow(query, args...).Scan(&user.ID)
 }
 

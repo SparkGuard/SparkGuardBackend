@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users
     name         VARCHAR(255) NOT NULL DEFAULT 'User',
     email        VARCHAR(255) NOT NULL,
     salt         VARCHAR(20)  NOT NULL,
-    password     VARCHAR(255) NOT NULL,
+    password     VARCHAR(64)  NOT NULL,
     access_level SMALLINT     NOT NULL DEFAULT 0
 );
 
@@ -22,18 +22,18 @@ CREATE TABLE IF NOT EXISTS groups
     name VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS group_students
-(
-    group_id   INTEGER NOT NULL REFERENCES groups (id),
-    student_id INTEGER NOT NULL REFERENCES students (id),
-    PRIMARY KEY (group_id, student_id)
-);
-
 CREATE TABLE IF NOT EXISTS group_users
 (
     group_id INTEGER NOT NULL REFERENCES groups (id),
     user_id  INTEGER NOT NULL REFERENCES users (id),
     PRIMARY KEY (group_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS group_students
+(
+    group_id   INTEGER NOT NULL REFERENCES groups (id),
+    student_id INTEGER NOT NULL REFERENCES students (id),
+    PRIMARY KEY (group_id, student_id)
 );
 
 CREATE TABLE IF NOT EXISTS events

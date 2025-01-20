@@ -19,6 +19,14 @@ func initDB() {
 	}
 }
 
+func DeleteAll() {
+	if _, err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
+		panic(err)
+	}
+
+	initDB()
+}
+
 func init() {
 	var err error
 
