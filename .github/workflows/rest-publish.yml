@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: spark-rest
+  IMAGE_NAME: sparkguard/spark-rest
 
 jobs:
   build:
