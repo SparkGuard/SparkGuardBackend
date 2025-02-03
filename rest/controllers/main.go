@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"SparkGuardBackend/controllers/docs"
+	"SparkGuardBackend/controllers/events"
+	"SparkGuardBackend/controllers/groups"
 	"SparkGuardBackend/controllers/students"
 	"SparkGuardBackend/controllers/users"
 	"github.com/gin-contrib/cors"
@@ -37,6 +39,8 @@ func SetupRouter() *gin.Engine {
 
 	users.SetupControllers(r)
 	students.SetupControllers(r)
+	groups.SetupControllers(r)
+	events.SetupControllers(r)
 
 	return r
 }

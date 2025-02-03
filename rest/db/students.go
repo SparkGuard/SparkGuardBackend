@@ -1,6 +1,8 @@
 package db
 
-import "github.com/huandu/go-sqlbuilder"
+import (
+	"github.com/huandu/go-sqlbuilder"
+)
 
 func GetStudents() ([]Student, error) {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
@@ -60,7 +62,7 @@ func CreateStudent(student *Student) error {
 func EditStudent(student *Student) error {
 	sb := sqlbuilder.PostgreSQL.NewUpdateBuilder()
 
-	sb.Update("students").Set(sb.Assign("name", student.Name), sb.Assign("email", student.Email)).Where(sb.Equal("id", student.UserID))
+	sb.Update("students").Set(sb.Assign("name", student.Name), sb.Assign("email", student.Email), sb.Assign("user_id", student.UserID)).Where(sb.Equal("id", student.ID))
 
 	query, args := sb.Build()
 	_, err := db.Exec(query, args...)

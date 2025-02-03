@@ -3,6 +3,7 @@ package students
 import (
 	"SparkGuardBackend/db"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // @Summary Get all students
@@ -10,17 +11,17 @@ import (
 // @Tags Students
 // @Produce json
 // @Success 200 {object} []db.Student
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /students/ [get]
 func getStudents(c *gin.Context) {
 	students, err := db.GetStudents()
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, students)
+	c.JSON(http.StatusOK, students)
 }
 
 // @Summary Get student by ID
@@ -29,25 +30,25 @@ func getStudents(c *gin.Context) {
 // @Produce json
 // @Param id path uint true "Student ID"
 // @Success 200 {object} GetStudentResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /students/{id} [get]
 func getStudent(c *gin.Context) {
 	var request GetStudentRequest
 
 	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	student, err := db.GetStudent(request.ID)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, GetStudentResponse{*student})
+	c.JSON(http.StatusOK, GetStudentResponse{*student})
 }
 
 // @Summary Create student
@@ -56,27 +57,27 @@ func getStudent(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param student body CreateStudentRequest true "Student"
-// @Success 200 {object} GetStudentResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Success 201 {object} GetStudentResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /students/ [post]
 func createStudent(c *gin.Context) {
 	var err error
 	var request CreateStudentRequest
 
 	if err = c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = db.CreateStudent(&request.Student)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, GetStudentResponse{request.Student})
+	c.JSON(http.StatusCreated, GetStudentResponse{request.Student})
 }
 
 // @Summary Edit student
@@ -87,19 +88,19 @@ func createStudent(c *gin.Context) {
 // @Param id path uint true "Student ID"
 // @Param student body EditStudentRequest true "Student"
 // @Success 200 {object} GetStudentResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /students/{id} [patch]
 func editStudent(c *gin.Context) {
 	var request EditStudentRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -108,11 +109,11 @@ func editStudent(c *gin.Context) {
 	err := db.EditStudent(&request.Student)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, GetStudentResponse{request.Student})
+	c.JSON(http.StatusOK, GetStudentResponse{request.Student})
 }
 
 func SetupControllers(r *gin.Engine) {
@@ -122,5 +123,6 @@ func SetupControllers(r *gin.Engine) {
 		students.POST("/", createStudent)
 		students.GET("/:id", getStudent)
 		students.PATCH("/:id", editStudent)
+		// TODO: students.DELETE("/:id", deleteStudent)
 	}
 }

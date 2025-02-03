@@ -1,4 +1,4 @@
-package controllers
+package basic
 
 type DefaultSuccessResponse struct {
 	Message string `json:"message"`

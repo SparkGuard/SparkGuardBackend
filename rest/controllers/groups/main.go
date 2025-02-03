@@ -3,6 +3,7 @@ package groups
 import (
 	"SparkGuardBackend/db"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // SetupControllers sets up the routes for the groups controller
@@ -35,7 +36,7 @@ func createGroup(c *gin.Context) {
 	var request CreateGroupRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -46,41 +47,41 @@ func createGroup(c *gin.Context) {
 	err := db.CreateGroup(&group)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, group)
+	c.JSON(http.StatusCreated, group)
 }
 
 func getGroup(c *gin.Context) {
 	var request GetGroupRequest
 
 	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	group, err := db.GetGroup(request.ID)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, group)
+	c.JSON(http.StatusOK, group)
 }
 
 func editGroup(c *gin.Context) {
 	var request EditGroupRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -89,27 +90,27 @@ func editGroup(c *gin.Context) {
 	err := db.EditGroup(&request.Group)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, request.Group)
+	c.JSON(http.StatusOK, request.Group)
 }
 
 func deleteGroup(c *gin.Context) {
 	var request DeleteGroupRequest
 
 	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := db.DeleteGroup(request.ID)
 
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(http.StatusOK, gin.H{})
 }

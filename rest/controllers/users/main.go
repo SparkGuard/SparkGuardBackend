@@ -11,7 +11,7 @@ import (
 // @Tags Users
 // @Produce json
 // @Success 200 {object} []db.User
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /users/ [get]
 func getUsers(c *gin.Context) {
 	users, err := db.GetUsers()
@@ -30,8 +30,8 @@ func getUsers(c *gin.Context) {
 // @Produce json
 // @Param id path uint true "User ID"
 // @Success 200 {object} GetUserResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /users/{id} [get]
 func getUser(c *gin.Context) {
 	var request GetUserRequest
@@ -58,8 +58,8 @@ func getUser(c *gin.Context) {
 // @Produce json
 // @Param user body CreateUserRequest true "User"
 // @Success 200 {object} GetUserResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /users/ [post]
 func createUser(c *gin.Context) {
 	var request CreateUserRequest
@@ -93,8 +93,8 @@ func createUser(c *gin.Context) {
 // @Param id path uint true "User ID"
 // @Param user body EditUserRequest true "User"
 // @Success 200 {object} GetUserResponse
-// @Failure 400 {object} controllers.DefaultErrorResponse
-// @Failure 500 {object} controllers.DefaultErrorResponse
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
 // @Router /users/{id} [patch]
 func editUser(c *gin.Context) {
 	var request EditUserRequest
@@ -128,5 +128,6 @@ func SetupControllers(r *gin.Engine) {
 		users.POST("/", createUser)
 		users.GET("/:id", getUser)
 		users.PATCH("/:id", editUser)
+		// TODO: delete handle
 	}
 }

@@ -1,5 +1,5 @@
 generate-docs:
-	cd rest && swag init --parseDependency --parseInternal --parseDepth 1 && mv ./docs ./controllers
+	cd rest && swag init --parseDependency --parseInternal --parseDepth 1 && rm -rf ./controllers/docs && mv ./docs ./controllers
 
 run:
 	docker compose up --build

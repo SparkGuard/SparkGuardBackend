@@ -116,12 +116,11 @@ func GetGroup(id uint) (group *Group, err error) {
 func CreateGroup(group *Group) error {
 	sb := sqlbuilder.PostgreSQL.NewInsertBuilder()
 
-	sb.InsertInto("groups").Cols("name").Values(group.Name)
+	sb.InsertInto("groups").Cols("name").Values(group.Name).SQL("RETURNING id")
 
 	query, args := sb.Build()
-	_, err := db.Exec(query, args...)
 
-	return err
+	return db.QueryRow(query, args...).Scan(&group.ID)
 }
 
 func EditGroup(group *Group) error {
