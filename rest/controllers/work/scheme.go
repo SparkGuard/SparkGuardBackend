@@ -26,7 +26,8 @@ type UploadWorkRequest struct {
 }
 
 type DownloadWorkRequest struct {
-	ID uint `uri:"id" binding:"required"`
+	ID           uint `uri:"id"`
+	RedirectFlag bool `form:"redirect"`
 }
 
 type DownloadWorkResponse struct {

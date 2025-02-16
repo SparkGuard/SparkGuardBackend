@@ -3,6 +3,7 @@ package db
 import "github.com/huandu/go-sqlbuilder"
 
 func GetWorks() (works []*Work, err error) {
+	works = make([]*Work, 0)
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
 	sb.Select("id", "time", "event_id", "student_id").From("works")
