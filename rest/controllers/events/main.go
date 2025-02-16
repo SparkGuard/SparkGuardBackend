@@ -7,6 +7,13 @@ import (
 	"net/http"
 )
 
+// @Summary Retrieve all events
+// @Description Get a list of all events
+// @Tags Events
+// @Produce json
+// @Success 200 {array} db.Event
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /event/ [get]
 func getEvents(c *gin.Context) {
 	events, err := db.GetEvents()
 

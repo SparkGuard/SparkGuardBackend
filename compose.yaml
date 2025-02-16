@@ -3,12 +3,8 @@ services:
     build:
       context: ./rest
       target: final
-    environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DATABASE: db
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy

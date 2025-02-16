@@ -1,3 +1,8 @@
+define setup_env
+    $(eval include .env)
+    $(eval export)
+endef
+
 generate-docs:
 	cd rest && swag init --parseDependency --parseInternal --parseDepth 1 && rm -rf ./controllers/docs && mv ./docs ./controllers
 
@@ -7,7 +12,5 @@ run:
 test:
 	make generate-docs
 	docker compose up db -d
-	cd rest && \
-		POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_USER=user \
-		POSTGRES_PASSWORD=password POSTGRES_DATABASE=db GIN_MODE=release \
-		go test -v ./tests/...
+	$(call setup_env)
+	cd rest && go test -v ./tests/...

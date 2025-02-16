@@ -6,6 +6,7 @@ import (
 	"SparkGuardBackend/controllers/groups"
 	"SparkGuardBackend/controllers/students"
 	"SparkGuardBackend/controllers/users"
+	"SparkGuardBackend/controllers/work"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -41,6 +42,7 @@ func SetupRouter() *gin.Engine {
 	students.SetupControllers(r)
 	groups.SetupControllers(r)
 	events.SetupControllers(r)
+	work.SetupControllers(r)
 
 	return r
 }

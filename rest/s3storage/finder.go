@@ -1,10 +1,10 @@
-package s3
+package s3storage
 
 import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func (storage *S3Storage) isBucketExists(bucket string) (exists bool) {
+func isBucketExists(bucket string) (exists bool) {
 	conn := s3.New(storage.session)
 
 	_, err := conn.HeadBucket(&s3.HeadBucketInput{
@@ -14,7 +14,7 @@ func (storage *S3Storage) isBucketExists(bucket string) (exists bool) {
 	return err == nil
 }
 
-func (storage *S3Storage) IsFileExists(filePath string) (exists bool) {
+func IsFileExists(filePath string) (exists bool) {
 	conn := s3.New(storage.session)
 
 	_, err := conn.HeadObject(&s3.HeadObjectInput{

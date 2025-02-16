@@ -1,12 +1,17 @@
-package s3
+package s3storage
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-func Connect(endpoint, region, bucket string) (storage *S3Storage, err error) {
+var storage *S3Storage
+
+func Connect(endpoint, region, bucket string) (err error) {
+	fmt.Println("Starting connection to S3...")
+
 	storage = new(S3Storage)
 
 	storage.session, err = session.NewSession(&aws.Config{
@@ -17,10 +22,11 @@ func Connect(endpoint, region, bucket string) (storage *S3Storage, err error) {
 
 	storage.bucket = bucket
 
-	if !storage.isBucketExists(bucket) {
+	if !isBucketExists(bucket) {
 		err = ErrBucketNotExists
 		return
 	}
 
+	fmt.Println("Successfully established connection to S3!")
 	return
 }

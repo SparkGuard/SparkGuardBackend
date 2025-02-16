@@ -1,4 +1,4 @@
-package s3
+package s3storage
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func (storage *S3Storage) UploadFile(filePath string, file io.Reader) (err error) {
+func UploadFile(filePath string, file io.Reader) (err error) {
 	var buf bytes.Buffer
 
 	if _, err = io.Copy(&buf, file); err != nil {
@@ -24,10 +24,10 @@ func (storage *S3Storage) UploadFile(filePath string, file io.Reader) (err error
 	return
 }
 
-func (storage *S3Storage) UploadFileSafe(filePath string, file io.Reader) (err error) {
-	if storage.IsFileExists(filePath) {
+func UploadFileSafe(filePath string, file io.Reader) (err error) {
+	if IsFileExists(filePath) {
 		return ErrFileExists
 	}
 
-	return storage.UploadFile(filePath, file)
+	return UploadFile(filePath, file)
 }

@@ -1,11 +1,11 @@
 package work
 
-import "time"
+import (
+	"SparkGuardBackend/db"
+)
 
 type CreateWorkRequest struct {
-	Time      time.Time `json:"time"`
-	StudentID uint      `json:"student_id"`
-	EventID   uint      `json:"event_id"`
+	db.Work
 }
 
 type GetWorkRequest struct {
@@ -13,12 +13,22 @@ type GetWorkRequest struct {
 }
 
 type EditWorkRequest struct {
-	ID        uint      `uri:"id" binding:"required"`
-	Time      time.Time `json:"time"`
-	StudentID uint      `json:"student_id"`
-	EventID   uint      `json:"event_id"`
+	ID uint `json:"-" uri:"id"`
+	db.Work
 }
 
 type DeleteWorkRequest struct {
 	ID uint `uri:"id" binding:"required"`
+}
+
+type UploadWorkRequest struct {
+	ID uint `uri:"id" binding:"required"`
+}
+
+type DownloadWorkRequest struct {
+	ID uint `uri:"id" binding:"required"`
+}
+
+type DownloadWorkResponse struct {
+	URL string `json:"url"`
 }
