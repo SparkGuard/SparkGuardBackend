@@ -1,7 +1,8 @@
 services:
   server:
     build:
-      context: ./rest
+      context: ./
+      dockerfile: Dockerfile-rest
       target: final
     env_file:
       - .env
