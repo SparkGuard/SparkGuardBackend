@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/huandu/go-sqlbuilder"
+	"log"
 )
 
 func GetStudents() ([]Student, error) {
@@ -16,7 +17,12 @@ func GetStudents() ([]Student, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
+
 	students := make([]Student, 0)
 
 	for rows.Next() {

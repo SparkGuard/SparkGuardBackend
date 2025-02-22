@@ -1,6 +1,9 @@
 package db
 
-import "github.com/huandu/go-sqlbuilder"
+import (
+	"github.com/huandu/go-sqlbuilder"
+	"log"
+)
 
 func GetWorks() (works []*Work, err error) {
 	works = make([]*Work, 0)
@@ -16,7 +19,11 @@ func GetWorks() (works []*Work, err error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	for rows.Next() {
 		var work Work

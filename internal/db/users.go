@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/huandu/go-sqlbuilder"
+	"log"
 )
 
 func GetUsers() ([]*User, error) {
@@ -16,7 +17,11 @@ func GetUsers() ([]*User, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	users := make([]*User, 0)
 
@@ -45,7 +50,11 @@ func GetUser(id uint) (*User, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	if !rows.Next() {
 		return nil, ErrNotFound

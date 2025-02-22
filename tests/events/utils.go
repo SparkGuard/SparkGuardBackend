@@ -2,7 +2,7 @@ package events
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/events"
-	"SparkGuardBackend/db"
+	"SparkGuardBackend/internal/db"
 	"bytes"
 	"encoding/json"
 	"fmt"

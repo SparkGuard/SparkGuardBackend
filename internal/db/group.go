@@ -1,6 +1,9 @@
 package db
 
-import "github.com/huandu/go-sqlbuilder"
+import (
+	"github.com/huandu/go-sqlbuilder"
+	"log"
+)
 
 func LoadGroupUsers(group *Group) error {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
@@ -14,7 +17,11 @@ func LoadGroupUsers(group *Group) error {
 		return err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	group.UserIDs = make([]uint, 0)
 
@@ -43,7 +50,11 @@ func LoadGroupStudents(group *Group) error {
 		return err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	group.StudentIDs = make([]uint, 0)
 
@@ -72,7 +83,11 @@ func GetGroups() ([]*Group, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var groups = make([]*Group, 0)
 

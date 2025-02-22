@@ -2,7 +2,7 @@ package groups
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/groups"
-	"SparkGuardBackend/db"
+	"SparkGuardBackend/internal/db"
 	"bytes"
 	"encoding/json"
 	"errors"

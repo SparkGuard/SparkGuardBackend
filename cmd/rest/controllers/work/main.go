@@ -3,7 +3,8 @@ package work
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
 	"SparkGuardBackend/internal/db"
-	s3storage2 "SparkGuardBackend/pkg/s3storage"
+	"SparkGuardBackend/pkg/s3storage"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -64,7 +65,7 @@ func getWork(c *gin.Context) {
 
 	work, err := db.GetWork(request.ID)
 	if err != nil {
-		if err == db.ErrNotFound {
+		if errors.Is(err, db.ErrNotFound) {
 			c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
 				Message: "Work not found",
 				Error:   err.Error(),
@@ -150,7 +151,7 @@ func editWork(c *gin.Context) {
 	// Update the work in the database
 	err := db.EditWork(&request.Work)
 	if err != nil {
-		if err == db.ErrNotFound {
+		if errors.Is(err, db.ErrNotFound) {
 			c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
 				Message: "Work not found",
 				Error:   err.Error(),
@@ -192,7 +193,7 @@ func deleteWork(c *gin.Context) {
 
 	err := db.DeleteWork(request.ID)
 	if err != nil {
-		if err == db.ErrNotFound {
+		if errors.Is(err, db.ErrNotFound) {
 			c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
 				Message: "Work not found",
 				Error:   err.Error(),
@@ -233,8 +234,8 @@ func uploadWork(c *gin.Context) {
 		return
 	}
 
-	if err := s3storage2.UploadFileSafe(fmt.Sprintf("./%d.zip", request.ID), c.Request.Body); err != nil {
-		if err == s3storage2.ErrFileExists {
+	if err := s3storage.UploadFileSafe(fmt.Sprintf("./%d.zip", request.ID), c.Request.Body); err != nil {
+		if errors.Is(err, s3storage.ErrFileExists) {
 			c.JSON(http.StatusConflict, basic.DefaultErrorResponse{
 				Message: "File already exists",
 				Error:   err.Error(),
@@ -285,8 +286,8 @@ func downloadWork(c *gin.Context) {
 
 	var response DownloadWorkResponse
 
-	if response.URL, err = s3storage2.ShareFile(fmt.Sprintf("./%d.zip", request.ID)); err != nil {
-		if err == s3storage2.ErrFileExists {
+	if response.URL, err = s3storage.ShareFile(fmt.Sprintf("./%d.zip", request.ID)); err != nil {
+		if errors.Is(err, s3storage.ErrFileExists) {
 			c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
 				Message: "Work doesn't exist",
 				Error:   err.Error(),

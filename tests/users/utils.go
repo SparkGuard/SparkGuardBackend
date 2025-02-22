@@ -2,7 +2,7 @@ package users
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/users"
-	"SparkGuardBackend/db"
+	"SparkGuardBackend/internal/db"
 	"SparkGuardBackend/tests/utils"
 	"encoding/hex"
 	"encoding/json"

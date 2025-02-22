@@ -63,10 +63,10 @@ type Tasks struct {
 	Status uint   `json:"status"`
 }
 
-type DBError string
+type Error string
 
-func (err DBError) Error() string {
+func (err Error) Error() string {
 	return string(err)
 }
 
-const ErrNotFound = DBError("not found")
+const ErrNotFound = Error("not found")

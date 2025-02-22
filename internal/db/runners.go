@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/google/uuid"
 	"github.com/huandu/go-sqlbuilder"
+	"log"
 )
 
 // GetRunners retrieves all runners from the database.
@@ -17,7 +18,12 @@ func GetRunners() (runners []*Runner, err error) {
 	if err != nil {
 		return
 	}
-	defer rows.Close()
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	for rows.Next() {
 		var runner Runner

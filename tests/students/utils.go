@@ -2,7 +2,7 @@ package students
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/students"
-	"SparkGuardBackend/db"
+	"SparkGuardBackend/internal/db"
 	"bytes"
 	"encoding/json"
 	"errors"

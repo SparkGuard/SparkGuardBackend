@@ -1,7 +1,7 @@
 package main
 
 import (
-	"SparkGuardBackend/cmd/rest/controllers"
+	"SparkGuardBackend/cmd/orchestrator/controllers"
 	"SparkGuardBackend/pkg/s3storage"
 	"fmt"
 	"log"
@@ -16,7 +16,6 @@ func main() {
 	r := controllers.SetupRouter()
 
 	log.Println("Server started")
-
 	if err := r.Run(":8080"); err != nil {
 		fmt.Println("Error:", err)
 	}

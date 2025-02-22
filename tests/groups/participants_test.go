@@ -2,7 +2,7 @@ package groups
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers"
-	"SparkGuardBackend/db"
+	"SparkGuardBackend/internal/db"
 	"SparkGuardBackend/tests/students"
 	"SparkGuardBackend/tests/users"
 	"testing"
