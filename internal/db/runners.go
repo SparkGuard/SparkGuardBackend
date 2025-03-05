@@ -90,3 +90,19 @@ func DeleteRunner(id uint) error {
 	_, err := db.Exec(query, args...)
 	return err
 }
+
+// GetRunnerByToken retrieves a single runner by its token.
+func GetRunnerByToken(token string) (runner *Runner, err error) {
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	sb.Select("id", "name", "token", "tag").From("runners").Where(sb.Equal("token", token))
+
+	query, args := sb.Build()
+	row := db.QueryRow(query, args...)
+
+	runner = &Runner{}
+	if err = row.Scan(&runner.ID, &runner.Name, &runner.Token, &runner.Tag); err != nil {
+		return nil, err
+	}
+
+	return runner, nil
+}

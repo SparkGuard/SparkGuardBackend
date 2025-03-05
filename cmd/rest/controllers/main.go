@@ -1,13 +1,13 @@
 package controllers
 
 import (
+	"SparkGuardBackend/cmd/rest/controllers/docs"
 	"SparkGuardBackend/cmd/rest/controllers/events"
 	"SparkGuardBackend/cmd/rest/controllers/groups"
 	"SparkGuardBackend/cmd/rest/controllers/runner"
 	"SparkGuardBackend/cmd/rest/controllers/students"
 	"SparkGuardBackend/cmd/rest/controllers/users"
 	"SparkGuardBackend/cmd/rest/controllers/work"
-	"SparkGuardBackend/cmd/rest/docs"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

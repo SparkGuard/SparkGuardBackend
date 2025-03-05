@@ -12,6 +12,19 @@ services:
     ports:
       - '8080:8080'
 
+  orchestrator:
+    build:
+      context: ./
+      dockerfile: Dockerfile-orchestrator
+      target: final
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '666:666'
+
   db:
     image: postgres:17-alpine
     environment:

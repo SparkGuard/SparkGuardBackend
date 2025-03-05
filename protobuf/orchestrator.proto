@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+option go_package = "SparkGuardBackend/services/orchestrator";
+
+import "google/protobuf/empty.proto";
+
+message Task {
+  uint64 ID = 1;
+  uint64 eventID = 2;
+  uint64 workID = 3;
+  string tag = 4;
+  uint64 status = 5;
+}
+
+message Runner {
+  uint64 ID = 1;
+  string name = 2;
+  string tag = 3;
+}
+
+message GetRunnerInfoResponse {
+    Runner runner = 1;
+}
+
+message GetWorksOfEventRequest {
+    uint64 eventID = 1;
+}
+
+message GetWorksOfEventResponse {
+    repeated uint64 workID = 1;
+}
+
+message GetWorksDownloadLinksRequest {
+    repeated uint64 workID = 1;
+}
+
+message GetWorksDownloadLinksResponseItem {
+    uint64 workID = 1;
+    string downloadLink = 2;
+}
+
+message GetWorksDownloadLinksResponse {
+    repeated GetWorksDownloadLinksResponseItem item = 1;
+}
+
+message GetNewTaskResponse {
+  Task task = 1;
+}
+
+message SendCrossCheckReportMatches {
+    uint64 firstWorkPath = 1;
+    uint64 firstWorkStart = 2;
+    uint64 firstWorkSize = 3;
+
+    uint64 secondWorkPath = 4;
+    uint64 secondWorkStart = 5;
+    uint64 secondWorkSize = 6;
+}
+
+message SendCrossCheckReportRequest {
+    uint64 firstWorkID = 1;
+    uint64 secondWorkID = 2;
+
+    repeated SendCrossCheckReportMatches match = 3;
+}
+
+message SendDefaultReportSegment {
+    uint64 workPath = 1;
+    uint64 workStart = 2;
+    uint64 workSize = 3;
+
+    float accuracy = 4;
+}
+
+message SendDefaultReportRequest {
+    uint64 workID = 1;
+
+    repeated SendDefaultReportSegment segment = 2;
+}
+
+service Orchestrator {
+  rpc GetRunnerInfo(google.protobuf.Empty) returns (GetRunnerInfoResponse);
+
+  rpc GetNewTask(google.protobuf.Empty) returns (GetNewTaskResponse);
+  rpc GetWorksOfEvent(GetWorksOfEventRequest) returns (GetWorksOfEventResponse);
+  rpc GetWorksDownloadLinks(GetWorksDownloadLinksRequest) returns (GetWorksDownloadLinksResponse);
+
+  rpc SendCrossCheckReport(SendCrossCheckReportRequest) returns (google.protobuf.Empty);
+  rpc SendDefaultReport(SendCrossCheckReportRequest) returns (google.protobuf.Empty);
+}
