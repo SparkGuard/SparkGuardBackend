@@ -47,7 +47,7 @@ func authInterceptor(
 	return handler(context.WithValue(ctx, "runner", runner), req)
 }
 
-func (s *Server) GetNewTask(ctx context.Context, in *emptypb.Empty) (*orchestrator.GetNewTaskResponse, error) {
+func (s *Server) GetNewTask(ctx context.Context, _ *emptypb.Empty) (*orchestrator.GetNewTaskResponse, error) {
 	// Пример: Проверка метаданных (авторизация)
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {

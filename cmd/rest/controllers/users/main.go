@@ -1,6 +1,7 @@
 package users
 
 import (
+	"SparkGuardBackend/cmd/rest/controllers/basic"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,7 +18,9 @@ func getUsers(c *gin.Context) {
 	users, err := db.GetUsers()
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, basic.DefaultErrorResponse{
+			Error: err.Error(),
+		})
 		return
 	}
 
