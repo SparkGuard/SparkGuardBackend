@@ -36,6 +36,41 @@ func GetWorks() (works []*Work, err error) {
 	return works, nil
 }
 
+// TODO: Add context
+func GetWorksIdOfEvent(eventID uint64) (works []uint64, err error) {
+	works = make([]uint64, 0)
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	sb.
+		Select("id").
+		From("works").
+		Where(sb.Equal("event_id", eventID))
+
+	query, args := sb.Build()
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
+
+	for rows.Next() {
+		var id uint64
+		if err = rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		works = append(works, id)
+	}
+
+	return works, nil
+}
+
 func GetWork(id uint) (work *Work, err error) {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
@@ -63,7 +98,18 @@ func CreateWork(work *Work) error {
 
 	query, args := sb.Build()
 
-	return db.QueryRow(query, args...).Scan(&work.ID)
+	err := db.QueryRow(query, args...).Scan(&work.ID)
+
+	go func() {
+		unique_tags := sqlbuilder.PostgreSQL.NewSelectBuilder()
+		unique_tags.Distinct().Select("tag").From("runners")
+
+		sb = sqlbuilder.PostgreSQL.NewInsertBuilder()
+		sb.InsertInto("tasks")
+		sqlbuilder.With(sqlbuilder.CTETable("unique_tags").As(unique_tags))
+	}()
+
+	return err
 }
 
 func EditWork(work *Work) error {

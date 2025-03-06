@@ -9,7 +9,7 @@ message Task {
   uint64 eventID = 2;
   uint64 workID = 3;
   string tag = 4;
-  uint64 status = 5;
+  string status = 5;
 }
 
 message Runner {
@@ -47,12 +47,16 @@ message GetNewTaskResponse {
   Task task = 1;
 }
 
+message CloseTaskRequest {
+    repeated uint64 ID = 1;
+}
+
 message SendCrossCheckReportMatches {
-    uint64 firstWorkPath = 1;
+    string firstWorkPath = 1;
     uint64 firstWorkStart = 2;
     uint64 firstWorkSize = 3;
 
-    uint64 secondWorkPath = 4;
+    string secondWorkPath = 4;
     uint64 secondWorkStart = 5;
     uint64 secondWorkSize = 6;
 }
@@ -65,7 +69,7 @@ message SendCrossCheckReportRequest {
 }
 
 message SendDefaultReportSegment {
-    uint64 workPath = 1;
+    string workPath = 1;
     uint64 workStart = 2;
     uint64 workSize = 3;
 
@@ -82,9 +86,11 @@ service Orchestrator {
   rpc GetRunnerInfo(google.protobuf.Empty) returns (GetRunnerInfoResponse);
 
   rpc GetNewTask(google.protobuf.Empty) returns (GetNewTaskResponse);
+  rpc CloseTask(CloseTaskRequest) returns (google.protobuf.Empty);
+
   rpc GetWorksOfEvent(GetWorksOfEventRequest) returns (GetWorksOfEventResponse);
   rpc GetWorksDownloadLinks(GetWorksDownloadLinksRequest) returns (GetWorksDownloadLinksResponse);
 
   rpc SendCrossCheckReport(SendCrossCheckReportRequest) returns (google.protobuf.Empty);
-  rpc SendDefaultReport(SendCrossCheckReportRequest) returns (google.protobuf.Empty);
+  rpc SendDefaultReport(SendDefaultReportRequest) returns (google.protobuf.Empty);
 }

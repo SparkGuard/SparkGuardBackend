@@ -53,15 +53,29 @@ CREATE TABLE IF NOT EXISTS works
     student_id INTEGER                  NOT NULL REFERENCES students (id)
 );
 
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'adoptions_verdicts') THEN
+            CREATE TYPE adoptions_verdicts AS ENUM ('Not Issued', 'Insignificantly', 'Significantly', 'Blatant');
+        END IF;
+    END
+$$;
+
 CREATE TABLE IF NOT EXISTS adoptions
 (
-    id          SERIAL PRIMARY KEY,
-    work_id     INTEGER NOT NULL REFERENCES works (id),
-    path        TEXT,
+    id               SERIAL PRIMARY KEY,
+    work_id          INTEGER            NOT NULL REFERENCES works (id),
+    path             TEXT,
 
-    part_offset INTEGER,
-    part_size   INTEGER,
-    refers_to   INTEGER REFERENCES adoptions (id)
+    part_offset      INTEGER,
+    part_size        INTEGER,
+    refers_to        INTEGER REFERENCES adoptions (id),
+
+    similarity_score DECIMAL(5, 2),
+    is_ai_generated  BOOLEAN                     DEFAULT FALSE NOT NULL,
+
+    verdict          adoptions_verdicts NOT NULL DEFAULT 'Not Issued',
+    description      TEXT               NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS runners
@@ -72,10 +86,18 @@ CREATE TABLE IF NOT EXISTS runners
     tag   VARCHAR(20)  NOT NULL
 );
 
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tasks_verdicts') THEN
+            CREATE TYPE tasks_verdicts AS ENUM ('In queue', 'In work', 'Completed', 'Error');
+        END IF;
+    END
+$$;
+
 CREATE TABLE IF NOT EXISTS tasks
 (
     id      SERIAL PRIMARY KEY,
-    work_id INTEGER     NOT NULL REFERENCES works (id),
-    tag     VARCHAR(20) NOT NULL,
-    status  SMALLINT    NOT NULL DEFAULT 0
+    work_id INTEGER        NOT NULL REFERENCES works (id),
+    tag     VARCHAR(20)    NOT NULL,
+    status  tasks_verdicts NOT NULL DEFAULT 'In queue'
 )

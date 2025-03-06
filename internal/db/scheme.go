@@ -38,15 +38,29 @@ type Work struct {
 	EventID   uint      `json:"event"`
 }
 
+type AdoptionVerdict string
+
+const (
+	AdoptionNotIssued       AdoptionVerdict = "Not Issued"
+	AdoptionInsignificantly                 = "Insignificantly"
+	AdoptionSignificantly                   = "Significantly"
+	AdoptionBlatant                         = "Blatant"
+)
+
 type Adoption struct {
-	ID     uint    `json:"id"`
-	WorkID uint    `json:"work"`
+	ID     uint64  `json:"id"`
+	WorkID uint64  `json:"work"`
 	Path   *string `json:"path"`
 
-	PartOffset *uint `json:"part_offset,omitempty"`
-	PartSize   *uint `json:"part_size,omitempty"`
+	PartOffset *uint64 `json:"part_offset,omitempty"`
+	PartSize   *uint64 `json:"part_size,omitempty"`
+	RefersTo   *uint64 `json:"refers_to,omitempty"`
 
-	RefersTo *uint `json:"refers_to,omitempty"`
+	SimilarityScore float32 `json:"similarity_score"`
+	IsAIGenerated   bool    `json:"is_ai_generated"`
+
+	Verdict     AdoptionVerdict `json:"verdict"`
+	Description string          `json:"description"`
 }
 
 type Runner struct {
@@ -56,11 +70,11 @@ type Runner struct {
 	Tag   string `json:"tag"`
 }
 
-type Tasks struct {
+type Task struct {
 	ID     uint   `json:"id"`
 	WorkID uint   `json:"work"`
 	Tag    string `json:"tag"`
-	Status uint   `json:"status"`
+	Status string `json:"status"`
 }
 
 type Error string
