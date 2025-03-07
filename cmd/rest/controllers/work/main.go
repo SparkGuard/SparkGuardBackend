@@ -234,7 +234,26 @@ func uploadWork(c *gin.Context) {
 		return
 	}
 
-	if err := s3storage.UploadFileSafe(fmt.Sprintf("./%d.zip", request.ID), c.Request.Body); err != nil {
+	repacked_zip, err := repack(c.Request.Body)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, basic.DefaultErrorResponse{
+			Message: "Failed to process the file",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	work, err := db.GetWork(request.ID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
+			Message: "Work not found",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	if err = s3storage.UploadFileSafe(fmt.Sprintf("./%d/%d.zip", work.EventID, request.ID), repacked_zip); err != nil {
 		if errors.Is(err, s3storage.ErrFileExists) {
 			c.JSON(http.StatusConflict, basic.DefaultErrorResponse{
 				Message: "File already exists",

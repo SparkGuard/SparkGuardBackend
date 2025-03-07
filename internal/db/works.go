@@ -101,12 +101,16 @@ func CreateWork(work *Work) error {
 	err := db.QueryRow(query, args...).Scan(&work.ID)
 
 	go func() {
-		unique_tags := sqlbuilder.PostgreSQL.NewSelectBuilder()
-		unique_tags.Distinct().Select("tag").From("runners")
+		tasksQuery := `
+			WITH unique_tags AS (
+				SELECT DISTINCT tag FROM runners
+			)
+			INSERT INTO tasks (work_id, tag, status)
+			SELECT $1, unique_tags.tag, 'In queue'
+			FROM unique_tags;
+		`
 
-		sb = sqlbuilder.PostgreSQL.NewInsertBuilder()
-		sb.InsertInto("tasks")
-		sqlbuilder.With(sqlbuilder.CTETable("unique_tags").As(unique_tags))
+		db.Exec(tasksQuery, work.ID)
 	}()
 
 	return err

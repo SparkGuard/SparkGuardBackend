@@ -55,6 +55,23 @@ func GetStudent(id uint) (*Student, error) {
 	return &student, nil
 }
 
+func GetStudentByName(name string) (*Student, error) {
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	sb.Select("id", "name", "email", "user_id").From("students").Where(sb.Equal("name", name))
+
+	query, args := sb.Build()
+	row := db.QueryRow(query, args...)
+
+	var student Student
+
+	if err := row.Scan(&student.ID, &student.Name, &student.Email, &student.UserID); err != nil {
+		return nil, err
+	}
+
+	return &student, nil
+}
+
 func CreateStudent(student *Student) error {
 	sb := sqlbuilder.PostgreSQL.NewInsertBuilder()
 

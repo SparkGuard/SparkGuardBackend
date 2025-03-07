@@ -15,6 +15,10 @@ generate-docs:
 run:
 	docker compose up --build
 
+run-upload:
+	$(call setup_env)
+	go run ./cmd/uploader/
+
 test:
 	make generate-docs
 	docker compose up db -d

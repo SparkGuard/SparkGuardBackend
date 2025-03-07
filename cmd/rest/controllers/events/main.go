@@ -28,6 +28,16 @@ func getEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, events)
 }
 
+// @Summary Create a new event
+// @Description Create a new event with the provided information
+// @Tags Events
+// @Accept json
+// @Produce json
+// @Param event body CreateEventRequest true "Event to create"
+// @Success 201 {object} db.Event
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /event/ [post]
 func createEvent(c *gin.Context) {
 	var request CreateEventRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -50,6 +60,15 @@ func createEvent(c *gin.Context) {
 	c.JSON(http.StatusCreated, request.Event)
 }
 
+// @Summary Retrieve a specific event
+// @Description Get details of an event by its ID
+// @Tags Events
+// @Produce json
+// @Param id path string true "Event ID"
+// @Success 200 {object} db.Event
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /event/{id} [get]
 func getEvent(c *gin.Context) {
 	var request GetEventRequest
 	if err := c.BindUri(&request); err != nil {
@@ -72,6 +91,17 @@ func getEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, event)
 }
 
+// @Summary Update a specific event
+// @Description Update an event's data by its ID
+// @Tags Events
+// @Accept json
+// @Produce json
+// @Param id path string true "Event ID"
+// @Param event body EditEventRequest true "Event data to update"
+// @Success 200 {object} db.Event
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /event/{id} [patch]
 func editEvent(c *gin.Context) {
 	var request EditEventRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -103,6 +133,15 @@ func editEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, request.Event)
 }
 
+// @Summary Delete a specific event
+// @Description Delete an event by its ID
+// @Tags Events
+// @Produce json
+// @Param id path string true "Event ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /event/{id} [delete]
 func deleteEvent(c *gin.Context) {
 	var request DeleteEventRequest
 	if err := c.BindUri(&request); err != nil {
