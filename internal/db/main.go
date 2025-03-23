@@ -12,6 +12,7 @@ import (
 var initSQL string
 
 var db *sql.DB
+var connectionString string
 
 func initDB() {
 	if _, err := db.Exec(initSQL); err != nil {
@@ -32,7 +33,7 @@ func init() {
 
 	fmt.Printf("Trying to connect as: %v\n", os.Getenv("POSTGRES_USER"))
 
-	var connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+	connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_HOST"),
 		os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_DATABASE"))
 

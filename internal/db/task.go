@@ -1,7 +1,9 @@
 package db
 
 import (
+	"context"
 	"github.com/huandu/go-sqlbuilder"
+	"github.com/jackc/pgx/v5"
 	"log"
 )
 
@@ -96,52 +98,51 @@ func GetTaskFromQueueForRunner(tag string) (*Task, error) {
 		).
 		SQL("FOR UPDATE SKIP LOCKED") // Ensures only one process can access the task
 
-	query, args := sb.Build()
-	tx, err := db.Begin()
+	selectQuery, selectArgs := sb.Build()
+
+	// Begin a new transaction
+	conn, err := pgx.Connect(context.TODO(), connectionString)
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close(context.TODO())
 
+	tx, err := conn.Begin(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	// Ensure we rollback the transaction if an error occurs
 	defer func() {
 		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			if rollbackErr := tx.Rollback(context.TODO()); rollbackErr != nil {
 				log.Printf("failed to rollback transaction: %v", rollbackErr)
 			}
 		} else {
-			if commitErr := tx.Commit(); commitErr != nil {
+			if commitErr := tx.Commit(context.TODO()); commitErr != nil {
 				log.Printf("failed to commit transaction: %v", commitErr)
 			}
 		}
 	}()
 
-	rows, err := tx.Query(query, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		if err = rows.Close(); err != nil {
-			log.Printf("failed to close rows: %v", err)
-		}
-	}()
-
-	if !rows.Next() {
-		return nil, ErrNotFound
-	}
+	// Execute SELECT query to fetch the task
+	row := tx.QueryRow(context.TODO(), selectQuery, selectArgs...)
 
 	task := Task{}
-	if err = rows.Scan(&task.ID, &task.WorkID, &task.Tag, &task.Status); err != nil {
+	if err = row.Scan(&task.ID, &task.WorkID, &task.Tag, &task.Status); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
-	// Lock the task by updating the status to "Processing"
 	sbUpdate := sqlbuilder.PostgreSQL.NewUpdateBuilder()
 	sbUpdate.Update("tasks").
 		Set(sbUpdate.Assign("status", "In work")).
 		Where(sbUpdate.Equal("id", task.ID))
-
 	updateQuery, updateArgs := sbUpdate.Build()
-	_, err = tx.Exec(updateQuery, updateArgs...)
+
+	// Lock the task by updating its status to "In work"
+	_, err = tx.Exec(context.TODO(), updateQuery, updateArgs...)
 	if err != nil {
 		return nil, err
 	}
