@@ -2,23 +2,23 @@ package main
 
 import (
 	"SparkGuardBackend/internal/db"
-	"bytes"
+	"SparkGuardBackend/internal/repacker"
+	"SparkGuardBackend/pkg/s3storage"
 	"fmt"
-	"io"
-	"log"
-	"mime/multipart"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
-const path = "/Users/kerblif/Downloads/790617_1-Проект 3_2-1561132"
-const url = "http://localhost:8080/works/%d/upload"
-const eventID = 2
+const path = "/Users/kerblif/Downloads/790617_1-Проект 3_2 - повторка-1571841"
+const eventID = 4
 
 func main() {
+	if err := s3storage.Connect(os.Getenv("S3_ENDPOINT"), os.Getenv("S3_REGION"), os.Getenv("S3_BUCKET")); err != nil {
+		panic(err)
+	}
+
 	err := processArchives(path)
 	if err != nil {
 		fmt.Printf("Error processing archives: %v\n", err)
@@ -41,6 +41,7 @@ func processArchives(rootPath string) error {
 				// Вызываем функцию загрузки для архива.
 				if err = upload(path); err != nil {
 					fmt.Printf("Error uploading file %s: %v\n", path, err)
+					panic(err)
 				}
 			}
 		}
@@ -96,49 +97,16 @@ func upload(path string) error {
 	}
 	defer file.Close()
 
-	// Создаем Buffer и экземпляр Writer для multipart/form-data
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	clear_file, err := repacker.Repack(file)
 
-	// Добавляем файл в форму
-	part, err := writer.CreateFormFile("file", path)
 	if err != nil {
-		return fmt.Errorf("failed to create form file: %v", err)
+		return fmt.Errorf("failed to repack file: %v", err)
 	}
 
-	// Копируем содержимое файла в форму
-	if _, err := io.Copy(part, file); err != nil {
-		return fmt.Errorf("failed to copy file content: %v", err)
-	}
+	err = s3storage.UploadFileSafe(fmt.Sprintf("./%d/%d.zip", work.EventID, work.ID), clear_file)
 
-	// Завершаем запись данных
-	if err := writer.Close(); err != nil {
-		return fmt.Errorf("failed to close writer: %v", err)
-	}
-
-	// Создаем запрос
-	req, err := http.NewRequest("PUT", fmt.Sprintf(url, work.ID), body)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %v", err)
-	}
-
-	// Устанавливаем заголовки
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("accept", "application/json")
-
-	// Отправляем запрос
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Проверяем ответ
-	if resp.StatusCode != http.StatusOK {
-		tmp, _ := io.ReadAll(resp.Body)
-		log.Println(string(tmp))
-		return fmt.Errorf("request failed with status: %s", resp.Status)
+		return fmt.Errorf("failed to upload file to S3: %v", err)
 	}
 
 	fmt.Println("File uploaded successfully")

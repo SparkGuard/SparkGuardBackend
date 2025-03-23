@@ -3,6 +3,7 @@ package work
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
 	"SparkGuardBackend/internal/db"
+	"SparkGuardBackend/internal/repacker"
 	"SparkGuardBackend/pkg/s3storage"
 	"errors"
 	"fmt"
@@ -234,7 +235,7 @@ func uploadWork(c *gin.Context) {
 		return
 	}
 
-	repacked_zip, err := repack(c.Request.Body)
+	repacked_zip, err := repacker.Repack(c.Request.Body)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, basic.DefaultErrorResponse{

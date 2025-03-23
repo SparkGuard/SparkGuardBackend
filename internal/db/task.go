@@ -91,7 +91,7 @@ func GetTaskFromQueueForRunner(tag string) (*Task, error) {
 		Where(
 			sb.And(
 				sb.Equal("tag", tag),
-				sb.Equal("status", "Queued"),
+				sb.Equal("status", "In queue"),
 			),
 		).
 		SQL("FOR UPDATE SKIP LOCKED") // Ensures only one process can access the task

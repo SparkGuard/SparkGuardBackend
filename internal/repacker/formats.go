@@ -1,40 +1,34 @@
-package work
+package repacker
 
 import (
 	"archive/zip"
-	"bytes"
 	"fmt"
 	"github.com/bodgit/sevenzip"
 	"github.com/nwaples/rardecode"
+	"golang.org/x/text/encoding/charmap"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-// Распаковка ZIP-архива
-func unzipZip(data []byte, destination string) error {
-	reader := bytes.NewReader(data)
+// decodeFileName декодирует имя файла из CP437 в UTF-8.
+func decodeFileName(name string) (string, error) {
+	decoder := charmap.CodePage437.NewDecoder() // CP437 → UTF-8
+	decodedName, err := decoder.String(name)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode file name: %s, error: %v", name, err)
+	}
+	return decodedName, nil
+}
 
-	// Создаем zip.Reader из буфера
-	zipReader, err := zip.NewReader(reader, int64(len(data)))
+func extractZipFile(file *zip.File, destination string) error {
+	name, err := decodeFileName(file.Name)
 	if err != nil {
 		return err
 	}
 
-	// Распаковка файлов
-	for _, file := range zipReader.File {
-		err := extractZipFile(file, destination)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func extractZipFile(file *zip.File, destination string) error {
-	path := filepath.Join(destination, file.Name)
+	path := filepath.Join(destination, name)
 
 	// Предотвращение выхода за пределы директории
 	if !strings.HasPrefix(path, filepath.Clean(destination)+string(os.PathSeparator)) {
@@ -67,9 +61,29 @@ func extractZipFile(file *zip.File, destination string) error {
 	return err
 }
 
-// Распаковка 7z-архива
-func unzip7z(reader io.ReaderAt, destination string) error {
-	archive, err := sevenzip.NewReader(reader, int64(reader.(interface{ Len() int }).Len()))
+// UnzipZip распаковывает zip-архив.
+func UnzipZip(data io.ReaderAt, size int64, destination string) error {
+	// Создаем zip.Reader из буфера
+	zipReader, err := zip.NewReader(data, size)
+	if err != nil {
+		return err
+	}
+
+	// Распаковка файлов
+	for _, file := range zipReader.File {
+		err = extractZipFile(file, destination)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Unzip7z распаковывает 7z-архив.
+func Unzip7z(reader io.ReaderAt, size int64, destination string) error {
+	archive, err := sevenzip.NewReader(reader, size)
 	if err != nil {
 		return err
 	}
@@ -86,14 +100,14 @@ func unzip7z(reader io.ReaderAt, destination string) error {
 
 		// Если это директория
 		if file.FileInfo().IsDir() {
-			if err := os.MkdirAll(path, os.ModePerm); err != nil {
+			if err = os.MkdirAll(path, os.ModePerm); err != nil {
 				return err
 			}
 			continue
 		}
 
 		// Если это файл
-		if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 			return err
 		}
 
@@ -120,52 +134,63 @@ func unzip7z(reader io.ReaderAt, destination string) error {
 	return nil
 }
 
-// Распаковка RAR-архива
-func unzipRar(reader io.Reader, destination string) error {
+// UnzipRar распаковывает rar-архив.
+func UnzipRar(reader io.Reader, _ int64, destination string) error {
+	// Создаем RAR-декодер
 	rarReader, err := rardecode.NewReader(reader, "")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialize RAR reader: %w", err)
 	}
 
 	for {
+		// Получаем заголовок файла из архива
 		header, err := rarReader.Next()
 		if err == io.EOF {
-			break
+			break // Конец архива
 		}
 		if err != nil {
-			return err
+			// Если ошибка — логируем и продолжаем
+			fmt.Printf("Skipping file due to error: %v\n", err)
+			continue
 		}
 
 		path := filepath.Join(destination, header.Name)
 
 		// Предотвращение выхода за пределы директории
 		if !strings.HasPrefix(path, filepath.Clean(destination)+string(os.PathSeparator)) {
-			return os.ErrInvalid
+			fmt.Printf("Skipping invalid file path: %s\n", path)
+			continue
 		}
 
-		// Если это директория
+		// Если это директория, создаем ее
 		if header.IsDir {
 			if err := os.MkdirAll(path, os.ModePerm); err != nil {
-				return err
+				fmt.Printf("Error creating directory %s: %v\n", path, err)
 			}
 			continue
 		}
 
-		// Если это файл
+		// Если это файл, создаем необходимые директории
 		if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-			return err
+			fmt.Printf("Error creating parent directories for %s: %v\n", path, err)
+			continue
 		}
 
+		// Создаем файл для записи
 		outFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 		if err != nil {
-			return err
+			fmt.Printf("Error creating file %s: %v\n", path, err)
+			continue
 		}
 
+		// Копируем содержимое файла
 		if _, err := io.Copy(outFile, rarReader); err != nil {
+			fmt.Printf("Error writing file %s: %v\n", path, err)
 			outFile.Close()
-			return err
+			continue
 		}
 
+		// Закрываем файл
 		outFile.Close()
 	}
 
