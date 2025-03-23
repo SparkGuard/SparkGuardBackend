@@ -55,6 +55,7 @@ func (_ *Server) SendDefaultReport(_ context.Context, request *orchestrator.Send
 		adoption.PartOffset = &request.Segment[i].WorkStart
 		adoption.PartSize = &request.Segment[i].WorkSize
 		adoption.SimilarityScore = request.Segment[i].Accuracy
+		adoption.Verdict = db.AdoptionNotIssued
 
 		if err = db.CreateAdoption(adoption); err != nil {
 			log.Println("Error saving default report:", err.Error())
