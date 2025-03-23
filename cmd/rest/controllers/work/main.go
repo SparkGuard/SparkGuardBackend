@@ -304,9 +304,17 @@ func downloadWork(c *gin.Context) {
 		return
 	}
 
-	var response DownloadWorkResponse
+	work, err := db.GetWork(request.ID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
+			Message: "Work not found",
+			Error:   err.Error(),
+		})
+		return
+	}
 
-	if response.URL, err = s3storage.ShareFile(fmt.Sprintf("./%d.zip", request.ID)); err != nil {
+	var response DownloadWorkResponse
+	if response.URL, err = s3storage.ShareFile(fmt.Sprintf("./%d/%d.zip", work.EventID, request.ID)); err != nil {
 		if errors.Is(err, s3storage.ErrFileExists) {
 			c.JSON(http.StatusNotFound, basic.DefaultErrorResponse{
 				Message: "Work doesn't exist",
