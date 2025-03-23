@@ -22,8 +22,7 @@ RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY . ./
 
-RUN --mount=type=cache,target=/go/pkg/mod/ \
-       swag init --parseDependency --parseInternal --parseDepth 0 -g cmd/rest/main.go --output cmd/rest/controllers/docs
+RUN swag init --parseDependency --parseInternal --parseDepth 0 -g cmd/rest/main.go --output cmd/rest/controllers/docs
 
 RUN CGO_ENABLED=0 GOARCH=amd64 go build -o /bin/server cmd/rest/main.go
 
