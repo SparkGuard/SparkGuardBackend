@@ -28,7 +28,12 @@ func (_ *Server) GetWorksDownloadLinks(_ context.Context, request *orchestrator.
 	}
 
 	for ind, id := range request.WorkID {
-		link, _ := s3storage.ShareFile(fmt.Sprintf("%d.zip", id))
+		work, err := db.GetWork(uint(id))
+		if err != nil {
+			continue
+		}
+
+		link, _ := s3storage.ShareFile(fmt.Sprintf("./%d/%d.zip", work.EventID, id))
 
 		response.Item[ind] = &orchestrator.GetWorksDownloadLinksResponseItem{
 			WorkID:       id,
