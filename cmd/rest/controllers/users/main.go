@@ -2,6 +2,8 @@ package users
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
+	"SparkGuardBackend/cmd/rest/middleware"
+	"SparkGuardBackend/internal/auth"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,6 +11,7 @@ import (
 
 // @Summary Get all users
 // @Description Get all users
+// @Security		ApiKeyAuth
 // @Tags Users
 // @Produce json
 // @Success 200 {object} []db.User
@@ -29,6 +32,7 @@ func getUsers(c *gin.Context) {
 
 // @Summary Get user by ID
 // @Description Get user by ID
+// @Security		ApiKeyAuth
 // @Tags Users
 // @Produce json
 // @Param id path uint true "User ID"
@@ -56,6 +60,7 @@ func getUser(c *gin.Context) {
 
 // @Summary Create user
 // @Description Create user
+// @Security		ApiKeyAuth
 // @Tags Users
 // @Accept json
 // @Produce json
@@ -72,65 +77,63 @@ func createUser(c *gin.Context) {
 		return
 	}
 
-	user := db.User{
-		Name:        request.Username,
-		Email:       request.Email,
-		AccessLevel: request.AccessLevel,
-	}
-
-	err := db.CreateUser(&user, request.Salt, request.Hash)
+	err := db.CreateUser(&request.User, request.Password)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, GetUserResponse{user})
+	c.JSON(http.StatusCreated, GetUserResponse{request.User})
 }
 
-// @Summary Edit user
-// @Description Edit user
+// @Summary Login user
+// @Description Login user
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param id path uint true "User ID"
-// @Param user body EditUserRequest true "User"
+// @Param login body LoginRequest true "Login"
 // @Success 200 {object} GetUserResponse
 // @Failure 400 {object} basic.DefaultErrorResponse
-// @Failure 500 {object} basic.DefaultErrorResponse
-// @Router /users/{id} [patch]
-func editUser(c *gin.Context) {
-	var request EditUserRequest
+// @Failure 401 {object} basic.DefaultErrorResponse
+// @Router /users/login [post]
+func loginUser(c *gin.Context) {
+	var request LoginRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := c.ShouldBindUri(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	request.User.ID = request.ID
-
-	err := db.EditUser(&request.User)
-
+	user, err := db.VerifyLogin(request.Email, request.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, basic.DefaultErrorResponse{
+			Error:   err.Error(),
+			Message: "invalid login or password",
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, GetUserResponse{request.User})
+	// Генерация JWT токена
+	token, err := auth.GenerateJWT(user.ID, user.Email, user.AccessLevel)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Возврат информации о пользователе вместе с токеном
+	c.JSON(http.StatusOK, LoginResponse{
+		User:  user,
+		Token: token,
+	})
 }
 
 func SetupControllers(r *gin.Engine) {
 	users := r.Group("/users")
 	{
-		users.GET("/", getUsers)
-		users.POST("/", createUser)
-		users.GET("/:id", getUser)
-		users.PATCH("/:id", editUser)
-		// TODO: delete handle
+		users.GET("/", middleware.AuthMiddleware, getUsers)
+		users.POST("/", middleware.AuthMiddleware, middleware.AdminMiddleware, createUser)
+		users.GET("/:id", middleware.AuthMiddleware, getUser)
+		users.POST("/login", loginUser)
 	}
 }

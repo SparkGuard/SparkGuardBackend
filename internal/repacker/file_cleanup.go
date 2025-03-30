@@ -7,7 +7,7 @@ import (
 
 // RemoveUnwantedFiles удаляет ненужные файлы и директории из указанного пути.
 func RemoveUnwantedFiles(root string) error {
-	unwanted := []string{".git", ".idea", ".vs", ".DS_Store", "bin", "obj"}
+	unwanted := []string{".git", ".idea", ".vs", ".DS_Store", "bin", "obj", "__MACOS"}
 
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

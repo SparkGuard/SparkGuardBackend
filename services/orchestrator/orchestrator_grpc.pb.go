@@ -23,6 +23,7 @@ const (
 	Orchestrator_GetRunnerInfo_FullMethodName         = "/Orchestrator/GetRunnerInfo"
 	Orchestrator_GetNewTask_FullMethodName            = "/Orchestrator/GetNewTask"
 	Orchestrator_CloseTask_FullMethodName             = "/Orchestrator/CloseTask"
+	Orchestrator_CloseTaskWithError_FullMethodName    = "/Orchestrator/CloseTaskWithError"
 	Orchestrator_GetWorksOfEvent_FullMethodName       = "/Orchestrator/GetWorksOfEvent"
 	Orchestrator_GetWorksDownloadLinks_FullMethodName = "/Orchestrator/GetWorksDownloadLinks"
 	Orchestrator_SendCrossCheckReport_FullMethodName  = "/Orchestrator/SendCrossCheckReport"
@@ -36,6 +37,7 @@ type OrchestratorClient interface {
 	GetRunnerInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetRunnerInfoResponse, error)
 	GetNewTask(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNewTaskResponse, error)
 	CloseTask(ctx context.Context, in *CloseTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CloseTaskWithError(ctx context.Context, in *CloseTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetWorksOfEvent(ctx context.Context, in *GetWorksOfEventRequest, opts ...grpc.CallOption) (*GetWorksOfEventResponse, error)
 	GetWorksDownloadLinks(ctx context.Context, in *GetWorksDownloadLinksRequest, opts ...grpc.CallOption) (*GetWorksDownloadLinksResponse, error)
 	SendCrossCheckReport(ctx context.Context, in *SendCrossCheckReportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -74,6 +76,16 @@ func (c *orchestratorClient) CloseTask(ctx context.Context, in *CloseTaskRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, Orchestrator_CloseTask_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orchestratorClient) CloseTaskWithError(ctx context.Context, in *CloseTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Orchestrator_CloseTaskWithError_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +139,7 @@ type OrchestratorServer interface {
 	GetRunnerInfo(context.Context, *emptypb.Empty) (*GetRunnerInfoResponse, error)
 	GetNewTask(context.Context, *emptypb.Empty) (*GetNewTaskResponse, error)
 	CloseTask(context.Context, *CloseTaskRequest) (*emptypb.Empty, error)
+	CloseTaskWithError(context.Context, *CloseTaskRequest) (*emptypb.Empty, error)
 	GetWorksOfEvent(context.Context, *GetWorksOfEventRequest) (*GetWorksOfEventResponse, error)
 	GetWorksDownloadLinks(context.Context, *GetWorksDownloadLinksRequest) (*GetWorksDownloadLinksResponse, error)
 	SendCrossCheckReport(context.Context, *SendCrossCheckReportRequest) (*emptypb.Empty, error)
@@ -149,6 +162,9 @@ func (UnimplementedOrchestratorServer) GetNewTask(context.Context, *emptypb.Empt
 }
 func (UnimplementedOrchestratorServer) CloseTask(context.Context, *CloseTaskRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseTask not implemented")
+}
+func (UnimplementedOrchestratorServer) CloseTaskWithError(context.Context, *CloseTaskRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseTaskWithError not implemented")
 }
 func (UnimplementedOrchestratorServer) GetWorksOfEvent(context.Context, *GetWorksOfEventRequest) (*GetWorksOfEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetWorksOfEvent not implemented")
@@ -233,6 +249,24 @@ func _Orchestrator_CloseTask_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrchestratorServer).CloseTask(ctx, req.(*CloseTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Orchestrator_CloseTaskWithError_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrchestratorServer).CloseTaskWithError(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Orchestrator_CloseTaskWithError_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrchestratorServer).CloseTaskWithError(ctx, req.(*CloseTaskRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -327,6 +361,10 @@ var Orchestrator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CloseTask",
 			Handler:    _Orchestrator_CloseTask_Handler,
+		},
+		{
+			MethodName: "CloseTaskWithError",
+			Handler:    _Orchestrator_CloseTaskWithError_Handler,
 		},
 		{
 			MethodName: "GetWorksOfEvent",

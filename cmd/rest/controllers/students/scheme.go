@@ -20,3 +20,7 @@ type EditStudentRequest struct {
 	ID uint `uri:"id"`
 	db.Student
 }
+
+type DeleteStudentRequest struct {
+	ID uint `uri:"id" binding:"required"`
+}

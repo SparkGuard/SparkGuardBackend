@@ -1,12 +1,25 @@
+DO
+$$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'users_access_levels') THEN
+            CREATE TYPE users_access_levels AS ENUM ('Admin', 'Teacher', 'Student', 'Guest');
+        END IF;
+    END
+$$;
+
 CREATE TABLE IF NOT EXISTS users
 (
     id           SERIAL PRIMARY KEY,
-    name         VARCHAR(255) NOT NULL DEFAULT 'User',
-    email        VARCHAR(255) NOT NULL,
-    salt         VARCHAR(20)  NOT NULL,
-    password     VARCHAR(64)  NOT NULL,
-    access_level SMALLINT     NOT NULL DEFAULT 0
+    name         VARCHAR(255)        NOT NULL DEFAULT 'User',
+    email        VARCHAR(255) UNIQUE NOT NULL,
+    password     TEXT                NOT NULL, -- Содержит Argon2-хэш
+    access_level users_access_levels NOT NULL DEFAULT 'Guest'::users_access_levels
 );
+
+-- Create admin user if it doesn't exist with password `changeme`
+INSERT INTO users (name, email, password, access_level)
+SELECT 'Admin', 'admin@admin.admin', '$argon2id$v=19$m=64,t=3,p=4$c1FaeTVkbDJ6Yk9mcENMbA$YoPjPQyNS4E2vspclzRZL6pOVsuzsU4/R0GnDvrBeS4', 'Admin'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE access_level = 'Admin');
 
 CREATE TABLE IF NOT EXISTS students
 (
@@ -53,7 +66,8 @@ CREATE TABLE IF NOT EXISTS works
     student_id INTEGER                  NOT NULL REFERENCES students (id)
 );
 
-DO $$
+DO
+$$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'adoptions_verdicts') THEN
             CREATE TYPE adoptions_verdicts AS ENUM ('Not Issued', 'Insignificantly', 'Significantly', 'Blatant');
@@ -86,7 +100,8 @@ CREATE TABLE IF NOT EXISTS runners
     tag   VARCHAR(20)  NOT NULL
 );
 
-DO $$
+DO
+$$
     BEGIN
         IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tasks_verdicts') THEN
             CREATE TYPE tasks_verdicts AS ENUM ('In queue', 'In work', 'Completed', 'Error');

@@ -6,7 +6,8 @@ type User struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"username"`
 	Email       string `json:"email"`
-	AccessLevel int    `json:"access_level"`
+	AccessLevel string `json:"access_level"`
+	Password    string `json:"-"`
 }
 
 type Student struct {

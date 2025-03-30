@@ -2,6 +2,7 @@ package students
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
+	"SparkGuardBackend/cmd/rest/middleware"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 // @Summary Get all students
 // @Description Get all students
+// @Security		ApiKeyAuth
 // @Tags Students
 // @Produce json
 // @Success 200 {object} []db.Student
@@ -29,6 +31,7 @@ func getStudents(c *gin.Context) {
 
 // @Summary Get student by ID
 // @Description Get student by ID
+// @Security		ApiKeyAuth
 // @Tags Students
 // @Produce json
 // @Param id path uint true "Student ID"
@@ -56,6 +59,7 @@ func getStudent(c *gin.Context) {
 
 // @Summary Create student
 // @Description Create student
+// @Security		ApiKeyAuth
 // @Tags Students
 // @Accept json
 // @Produce json
@@ -85,6 +89,7 @@ func createStudent(c *gin.Context) {
 
 // @Summary Edit student
 // @Description Edit student
+// @Security		ApiKeyAuth
 // @Tags Students
 // @Accept json
 // @Produce json
@@ -119,13 +124,39 @@ func editStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, GetStudentResponse{request.Student})
 }
 
+// @Summary Delete student
+// @Description Delete student
+// @Security		ApiKeyAuth
+// @Tags Students
+// @Produce json
+// @Param id path uint true "Student ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} basic.DefaultErrorResponse
+// @Failure 500 {object} basic.DefaultErrorResponse
+// @Router /students/{id} [delete]
+func deleteStudent(c *gin.Context) {
+	var request DeleteStudentRequest
+
+	if err := c.ShouldBindUri(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := db.DeleteStudent(request.ID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Student deleted successfully"})
+}
+
 func SetupControllers(r *gin.Engine) {
 	students := r.Group("/students")
 	{
 		students.GET("/", getStudents)
-		students.POST("/", createStudent)
+		students.POST("/", middleware.AdminMiddleware, createStudent)
 		students.GET("/:id", getStudent)
-		students.PATCH("/:id", editStudent)
-		// TODO: students.DELETE("/:id", deleteStudent)
+		students.PATCH("/:id", middleware.AdminMiddleware, editStudent)
+		students.DELETE("/:id", middleware.AdminMiddleware, deleteStudent)
 	}
 }

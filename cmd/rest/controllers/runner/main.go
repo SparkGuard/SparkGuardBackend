@@ -2,6 +2,7 @@ package runner
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
+	"SparkGuardBackend/cmd/rest/middleware"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,16 +10,17 @@ import (
 )
 
 func SetupControllers(r *gin.Engine) {
-	r.GET("/runners", GetRunners)
-	r.GET("/runners/:id", GetRunner)
-	r.POST("/runners", CreateRunner)
-	r.PUT("/runners/:id", EditRunner)
-	r.DELETE("/runners/:id", DeleteRunner)
+	r.GET("/runners", middleware.AdminMiddleware, GetRunners)
+	r.GET("/runners/:id", middleware.AdminMiddleware, GetRunner)
+	r.POST("/runners", middleware.AdminMiddleware, CreateRunner)
+	r.PUT("/runners/:id", middleware.AdminMiddleware, EditRunner)
+	r.DELETE("/runners/:id", middleware.AdminMiddleware, DeleteRunner)
 }
 
 // GetRunners retrieves all runners
 // @Summary Get runners
 // @Description Get the list of all runners
+// @Security		ApiKeyAuth
 // @Tags runners
 // @Produce json
 // @Success 200 {object} []db.Runner
@@ -36,6 +38,7 @@ func GetRunners(c *gin.Context) {
 // GetRunner retrieves a specific runner
 // @Summary Get a runner
 // @Description Get a runner by its ID
+// @Security		ApiKeyAuth
 // @Tags runners
 // @Accept json
 // @Produce json
@@ -63,6 +66,7 @@ func GetRunner(c *gin.Context) {
 // CreateRunner creates a new runner
 // @Summary Create a runner
 // @Description Create a new runner
+// @Security		ApiKeyAuth
 // @Tags runners
 // @Accept json
 // @Produce json
@@ -102,6 +106,7 @@ func CreateRunner(c *gin.Context) {
 // EditRunner updates a runner's information
 // @Summary Edit a runner
 // @Description Edit an existing runner by ID
+// @Security		ApiKeyAuth
 // @Tags runners
 // @Accept json
 // @Param id path int true "Runner ID"
@@ -140,6 +145,7 @@ func EditRunner(c *gin.Context) {
 // DeleteRunner deletes a runner by ID
 // @Summary Delete a runner
 // @Description Delete a runner by its ID
+// @Security		ApiKeyAuth
 // @Tags runners
 // @Param id path int true "Runner ID"
 // @Success 204

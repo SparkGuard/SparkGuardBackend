@@ -23,10 +23,14 @@ func (_ *Server) SendCrossCheckReport(_ context.Context, request *orchestrator.S
 		adoption1.Path = &request.Match[i].FirstWorkPath
 		adoption1.PartOffset = &request.Match[i].FirstWorkStart
 		adoption1.PartSize = &request.Match[i].FirstWorkSize
+		adoption1.Verdict = db.AdoptionNotIssued
+		adoption1.IsAIGenerated = false
 
 		adoption2.Path = &request.Match[i].SecondWorkPath
 		adoption2.PartOffset = &request.Match[i].SecondWorkStart
 		adoption2.PartSize = &request.Match[i].SecondWorkSize
+		adoption2.Verdict = db.AdoptionNotIssued
+		adoption2.IsAIGenerated = false
 
 		if err = db.CreateAdoption(adoption1); err != nil {
 			log.Println("Error saving cross-check report:", err.Error())
@@ -56,6 +60,7 @@ func (_ *Server) SendDefaultReport(_ context.Context, request *orchestrator.Send
 		adoption.PartSize = &request.Segment[i].WorkSize
 		adoption.SimilarityScore = request.Segment[i].Accuracy
 		adoption.Verdict = db.AdoptionNotIssued
+		adoption.IsAIGenerated = true
 
 		if err = db.CreateAdoption(adoption); err != nil {
 			log.Println("Error saving default report:", err.Error())

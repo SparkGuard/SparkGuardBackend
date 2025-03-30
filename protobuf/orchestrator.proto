@@ -87,6 +87,7 @@ service Orchestrator {
 
   rpc GetNewTask(google.protobuf.Empty) returns (GetNewTaskResponse);
   rpc CloseTask(CloseTaskRequest) returns (google.protobuf.Empty);
+  rpc CloseTaskWithError(CloseTaskRequest) returns (google.protobuf.Empty);
 
   rpc GetWorksOfEvent(GetWorksOfEventRequest) returns (GetWorksOfEventResponse);
   rpc GetWorksDownloadLinks(GetWorksDownloadLinksRequest) returns (GetWorksDownloadLinksResponse);

@@ -13,15 +13,20 @@ type GetUserResponse struct {
 }
 
 type CreateUserRequest struct {
-	Username    string `json:"username" binding:"required"`
-	Email       string `json:"email" binding:"required"`
-	AccessLevel int    `json:"access_level" binding:"required"`
-
-	Salt string `json:"salt" binding:"required"`
-	Hash string `json:"hash" binding:"required"`
+	db.User
 }
 
 type EditUserRequest struct {
 	ID uint `uri:"id"`
 	db.User
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	Token string   `json:"token"`
+	User  *db.User `json:"user"`
 }

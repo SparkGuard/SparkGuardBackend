@@ -51,3 +51,13 @@ func (_ *Server) CloseTask(_ context.Context, request *orchestrator.CloseTaskReq
 
 	return nil, nil
 }
+
+func (_ *Server) CloseTaskWithError(_ context.Context, request *orchestrator.CloseTaskRequest) (*emptypb.Empty, error) {
+	for _, id := range request.ID {
+		if err := db.CloseTaskWithError(uint(id)); err != nil {
+			fmt.Printf("Failed to close task with ID %d: %v\n", id, err)
+		}
+	}
+
+	return nil, nil
+}

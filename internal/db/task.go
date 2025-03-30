@@ -164,3 +164,31 @@ func CloseTask(id uint) error {
 	}
 	return nil
 }
+
+func CloseTaskWithError(id uint) error {
+	sb := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+
+	sb.Update("tasks").
+		Set(sb.Assign("status", "Error")).
+		Where(sb.Equal("id", id))
+
+	query, args := sb.Build()
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ResetTask resets a task's status to "In queue"
+func ResetTask(id uint) error {
+	sb := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+
+	sb.Update("tasks").
+		Set(sb.Assign("status", "In queue")).
+		Where(sb.Equal("id", id))
+
+	query, args := sb.Build()
+	_, err := db.Exec(query, args...)
+	return err
+}

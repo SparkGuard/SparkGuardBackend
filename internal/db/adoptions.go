@@ -60,3 +60,69 @@ func EditAdoption(adoption *Adoption) error {
 
 	return err
 }
+
+// GetAdoptionsByWork retrieves all adoptions for a specific work
+func GetAdoptionsByWork(workID uint) ([]*Adoption, error) {
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	sb.Select("id", "work_id", "path", "part_offset", "part_size", "refers_to", "similarity_score", "is_ai_generated", "verdict", "description").
+		From("adoptions").
+		Where(sb.Equal("work_id", workID))
+
+	query, args := sb.Build()
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	adoptions := make([]*Adoption, 0)
+	for rows.Next() {
+		adoption := Adoption{}
+		if err = rows.Scan(&adoption.ID, &adoption.WorkID, &adoption.Path, &adoption.PartOffset, &adoption.PartSize,
+			&adoption.RefersTo, &adoption.SimilarityScore, &adoption.IsAIGenerated, &adoption.Verdict, &adoption.Description); err != nil {
+			return nil, err
+		}
+		adoptions = append(adoptions, &adoption)
+	}
+
+	return adoptions, nil
+}
+
+func GetRelatedAdoptions(workID uint) ([]*Adoption, error) {
+	query := `
+	WITH RECURSIVE related_adoptions AS (
+	    SELECT id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description
+	    FROM adoptions
+	    WHERE work_id = $1
+
+	    UNION ALL
+
+	    SELECT t.id, t.work_id, t.path, t.part_offset, t.part_size, t.refers_to, t.similarity_score, t.is_ai_generated, t.verdict, t.description
+	    FROM adoptions t
+	    INNER JOIN related_adoptions ra
+	        ON t.work_id = ra.refers_to OR t.refers_to = ra.id
+	)
+	SELECT id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description
+	FROM related_adoptions;
+	`
+
+	rows, err := db.Query(query, workID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	adoptions := make([]*Adoption, 0)
+	for rows.Next() {
+		adoption := Adoption{}
+		if err = rows.Scan(&adoption.ID, &adoption.WorkID, &adoption.Path, &adoption.PartOffset, &adoption.PartSize,
+			&adoption.RefersTo, &adoption.SimilarityScore, &adoption.IsAIGenerated, &adoption.Verdict, &adoption.Description); err != nil {
+			return nil, err
+		}
+		adoptions = append(adoptions, &adoption)
+	}
+
+	return adoptions, nil
+}

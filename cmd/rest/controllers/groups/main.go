@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"SparkGuardBackend/cmd/rest/middleware"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,21 +10,22 @@ import (
 // SetupControllers sets up the routes for the groups controller
 func SetupControllers(r *gin.Engine) {
 	r.GET("/groups", getGroups)
-	r.POST("/groups", createGroup)
+	r.POST("/groups", middleware.TeacherMiddleware, createGroup)
 	r.GET("/groups/:id", getGroup)
-	r.PATCH("/groups/:id", editGroup)
-	r.DELETE("/groups/:id", deleteGroup)
+	r.PATCH("/groups/:id", middleware.TeacherMiddleware, editGroup)
+	r.DELETE("/groups/:id", middleware.TeacherMiddleware, deleteGroup)
 
-	r.POST("/groups/:id/students", addStudentToGroup)
-	r.DELETE("/groups/:id/students", removeStudentFromGroup)
+	r.POST("/groups/:id/students", middleware.TeacherMiddleware, addStudentToGroup)
+	r.DELETE("/groups/:id/students", middleware.TeacherMiddleware, removeStudentFromGroup)
 
-	r.POST("/groups/:id/users", addUserToGroup)
-	r.DELETE("/groups/:id/users", removeUserFromGroup)
+	r.POST("/groups/:id/users", middleware.TeacherMiddleware, addUserToGroup)
+	r.DELETE("/groups/:id/users", middleware.TeacherMiddleware, removeUserFromGroup)
 }
 
 // getGroups godoc
 // @Summary      Get all groups
 // @Description  Retrieve a list of all groups
+// @Security		ApiKeyAuth
 // @Tags         groups
 // @Produce      json
 // @Success      200  {array}  db.Group
@@ -43,6 +45,7 @@ func getGroups(c *gin.Context) {
 // createGroup godoc
 // @Summary      Create a group
 // @Description  Create a new group in the system
+// @Security		ApiKeyAuth
 // @Tags         groups
 // @Accept       json
 // @Produce      json
@@ -76,6 +79,7 @@ func createGroup(c *gin.Context) {
 // getGroup godoc
 // @Summary      Get group by ID
 // @Description  Retrieve a group's details by its ID
+// @Security		ApiKeyAuth
 // @Tags         groups
 // @Produce      json
 // @Param        id   path      int  true  "Group ID"
@@ -104,6 +108,7 @@ func getGroup(c *gin.Context) {
 // editGroup godoc
 // @Summary      Edit group
 // @Description  Update details of an existing group
+// @Security		ApiKeyAuth
 // @Tags         groups
 // @Accept       json
 // @Produce      json
@@ -141,6 +146,7 @@ func editGroup(c *gin.Context) {
 // deleteGroup godoc
 // @Summary      Delete group
 // @Description  Delete a group by its ID
+// @Security		ApiKeyAuth
 // @Tags         groups
 // @Produce      json
 // @Param        id   path      int  true  "Group ID"

@@ -92,3 +92,11 @@ func EditStudent(student *Student) error {
 
 	return err
 }
+
+func DeleteStudent(id uint) error {
+	sb := sqlbuilder.PostgreSQL.NewDeleteBuilder()
+	sb.DeleteFrom("students").Where(sb.Equal("id", id))
+	query, args := sb.Build()
+	_, err := db.Exec(query, args...)
+	return err
+}

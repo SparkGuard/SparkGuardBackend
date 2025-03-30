@@ -2,6 +2,7 @@ package events
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
+	"SparkGuardBackend/cmd/rest/middleware"
 	"SparkGuardBackend/internal/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 // @Summary Retrieve all events
 // @Description Get a list of all events
+// @Security		ApiKeyAuth
 // @Tags Events
 // @Produce json
 // @Success 200 {array} db.Event
@@ -30,6 +32,7 @@ func getEvents(c *gin.Context) {
 
 // @Summary Create a new event
 // @Description Create a new event with the provided information
+// @Security		ApiKeyAuth
 // @Tags Events
 // @Accept json
 // @Produce json
@@ -62,6 +65,7 @@ func createEvent(c *gin.Context) {
 
 // @Summary Retrieve a specific event
 // @Description Get details of an event by its ID
+// @Security		ApiKeyAuth
 // @Tags Events
 // @Produce json
 // @Param id path string true "Event ID"
@@ -93,6 +97,7 @@ func getEvent(c *gin.Context) {
 
 // @Summary Update a specific event
 // @Description Update an event's data by its ID
+// @Security		ApiKeyAuth
 // @Tags Events
 // @Accept json
 // @Produce json
@@ -135,6 +140,7 @@ func editEvent(c *gin.Context) {
 
 // @Summary Delete a specific event
 // @Description Delete an event by its ID
+// @Security		ApiKeyAuth
 // @Tags Events
 // @Produce json
 // @Param id path string true "Event ID"
@@ -168,9 +174,9 @@ func SetupControllers(r *gin.Engine) {
 	students := r.Group("/event")
 	{
 		students.GET("/", getEvents)
-		students.POST("/", createEvent)
+		students.POST("/", middleware.TeacherMiddleware, createEvent)
 		students.GET("/:id", getEvent)
-		students.PATCH("/:id", editEvent)
-		students.DELETE("/:id", deleteEvent)
+		students.PATCH("/:id", middleware.TeacherMiddleware, editEvent)
+		students.DELETE("/:id", middleware.TeacherMiddleware, deleteEvent)
 	}
 }

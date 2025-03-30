@@ -2,6 +2,7 @@ package work
 
 import (
 	"SparkGuardBackend/cmd/rest/controllers/basic"
+	"SparkGuardBackend/cmd/rest/middleware"
 	"SparkGuardBackend/internal/db"
 	"SparkGuardBackend/internal/repacker"
 	"SparkGuardBackend/pkg/s3storage"
@@ -16,13 +17,14 @@ func SetupControllers(r *gin.Engine) {
 	r.POST("/works", createWork)
 	r.GET("/works/:id", getWork)
 	r.PUT("/works/:id", editWork)
-	r.DELETE("/works/:id", deleteWork)
+	r.DELETE("/works/:id", middleware.TeacherMiddleware, deleteWork)
 	r.PUT("/works/:id/upload", uploadWork)
 	r.GET("/works/:id/download", downloadWork)
 }
 
 // @Summary Retrieves all works
 // @Description Fetches and returns a list of all works from the database
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept json
 // @Produce json
@@ -44,6 +46,7 @@ func getWorks(c *gin.Context) {
 
 // @Summary Retrieves a specific work by ID
 // @Description Fetches a single work item by its ID
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept json
 // @Produce json
@@ -87,6 +90,7 @@ func getWork(c *gin.Context) {
 
 // @Summary Creates a new work
 // @Description Adds a new work item to the database
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept json
 // @Produce json
@@ -120,6 +124,7 @@ func createWork(c *gin.Context) {
 
 // @Summary Updates a specific work
 // @Description Modifies an existing work item in the database
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept json
 // @Produce json
@@ -172,6 +177,7 @@ func editWork(c *gin.Context) {
 
 // @Summary Deletes a specific work
 // @Description Removes a work item from the database by its ID
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept json
 // @Produce json
@@ -214,6 +220,7 @@ func deleteWork(c *gin.Context) {
 
 // @Summary Uploads a file for a specific work
 // @Description Uploads a file for a work item
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Accept application/octet-stream
 // @Produce json
@@ -275,6 +282,7 @@ func uploadWork(c *gin.Context) {
 
 // @Summary Downloads a specific work file
 // @Description Generates a presigned URL to download a work file
+// @Security		ApiKeyAuth
 // @Tags Works
 // @Produce json
 // @Param id path uint true "Work ID"
