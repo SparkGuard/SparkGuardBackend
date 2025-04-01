@@ -19,28 +19,36 @@ message Runner {
 }
 
 message GetRunnerInfoResponse {
-    Runner runner = 1;
+  Runner runner = 1;
 }
 
 message GetWorksOfEventRequest {
-    uint64 eventID = 1;
+  uint64 eventID = 1;
 }
 
 message GetWorksOfEventResponse {
-    repeated uint64 workID = 1;
+  repeated uint64 workID = 1;
 }
 
 message GetWorksDownloadLinksRequest {
-    repeated uint64 workID = 1;
+  repeated uint64 workID = 1;
 }
 
 message GetWorksDownloadLinksResponseItem {
-    uint64 workID = 1;
-    string downloadLink = 2;
+  uint64 workID = 1;
+  string downloadLink = 2;
 }
 
 message GetWorksDownloadLinksResponse {
-    repeated GetWorksDownloadLinksResponseItem item = 1;
+  repeated GetWorksDownloadLinksResponseItem item = 1;
+}
+
+message GetAllNewTasksOfEventRequest {
+  uint64 eventID = 1;
+}
+
+message GetAllNewTasksOfEventResponse {
+  repeated Task task = 1;
 }
 
 message GetNewTaskResponse {
@@ -48,44 +56,45 @@ message GetNewTaskResponse {
 }
 
 message CloseTaskRequest {
-    repeated uint64 ID = 1;
+  repeated uint64 ID = 1;
 }
 
 message SendCrossCheckReportMatches {
-    string firstWorkPath = 1;
-    uint64 firstWorkStart = 2;
-    uint64 firstWorkSize = 3;
+  string firstWorkPath = 1;
+  uint64 firstWorkStart = 2;
+  uint64 firstWorkSize = 3;
 
-    string secondWorkPath = 4;
-    uint64 secondWorkStart = 5;
-    uint64 secondWorkSize = 6;
+  string secondWorkPath = 4;
+  uint64 secondWorkStart = 5;
+  uint64 secondWorkSize = 6;
 }
 
 message SendCrossCheckReportRequest {
-    uint64 firstWorkID = 1;
-    uint64 secondWorkID = 2;
+  uint64 firstWorkID = 1;
+  uint64 secondWorkID = 2;
 
-    repeated SendCrossCheckReportMatches match = 3;
+  repeated SendCrossCheckReportMatches match = 3;
 }
 
 message SendDefaultReportSegment {
-    string workPath = 1;
-    uint64 workStart = 2;
-    uint64 workSize = 3;
+  string workPath = 1;
+  uint64 workStart = 2;
+  uint64 workSize = 3;
 
-    float accuracy = 4;
+  float accuracy = 4;
 }
 
 message SendDefaultReportRequest {
-    uint64 workID = 1;
+  uint64 workID = 1;
 
-    repeated SendDefaultReportSegment segment = 2;
+  repeated SendDefaultReportSegment segment = 2;
 }
 
 service Orchestrator {
   rpc GetRunnerInfo(google.protobuf.Empty) returns (GetRunnerInfoResponse);
 
   rpc GetNewTask(google.protobuf.Empty) returns (GetNewTaskResponse);
+  rpc GetAllNewTasksOfEvent(GetAllNewTasksOfEventRequest) returns (GetAllNewTasksOfEventResponse);
   rpc CloseTask(CloseTaskRequest) returns (google.protobuf.Empty);
   rpc CloseTaskWithError(CloseTaskRequest) returns (google.protobuf.Empty);
 

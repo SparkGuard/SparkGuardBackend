@@ -150,6 +150,91 @@ func GetTaskFromQueueForRunner(tag string) (*Task, error) {
 	return &task, nil
 }
 
+func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) {
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	sb.Select("tasks.id", "tasks.work_id", "tasks.tag", "tasks.status").
+		From("tasks").
+		Where(
+			sb.And(
+				sb.Equal("tasks.tag", tag),
+				sb.Equal("tasks.status", "In queue"),
+				sb.Equal("works.event_id", eventID),
+			),
+		).
+		JoinWithOption(sqlbuilder.InnerJoin, "works", "tasks.work_id = works.id").
+		SQL("FOR UPDATE SKIP LOCKED") // Ensure rows are locked for the transaction
+
+	selectQuery, selectArgs := sb.Build()
+
+	// Begin a new transaction
+	conn, err := pgx.Connect(context.TODO(), connectionString)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close(context.TODO())
+
+	tx, err := conn.Begin(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	// Ensure we rollback the transaction if an error occurs
+	defer func() {
+		if err != nil {
+			if rollbackErr := tx.Rollback(context.TODO()); rollbackErr != nil {
+				log.Printf("failed to rollback transaction: %v", rollbackErr)
+			}
+		} else {
+			if commitErr := tx.Commit(context.TODO()); commitErr != nil {
+				log.Printf("failed to commit transaction: %v", commitErr)
+			}
+		}
+	}()
+
+	rows, err := tx.Query(context.TODO(), selectQuery, selectArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		rows.Close()
+	}()
+
+	tasks := make([]*Task, 0)
+	ids := make([]interface{}, 0)
+	for rows.Next() {
+		task := Task{}
+		if err = rows.Scan(&task.ID, &task.WorkID, &task.Tag, &task.Status); err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, &task)
+		ids = append(ids, task.ID)
+	}
+
+	if len(tasks) == 0 {
+		return nil, ErrNotFound
+	}
+
+	// Lock all tasks by updating their status to "In work"
+	sbUpdate := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+	sbUpdate.Update("tasks").
+		Set(sbUpdate.Assign("status", "In work")).
+		Where(
+			sbUpdate.And(
+				sbUpdate.Equal("work_id", eventID),
+				sbUpdate.In("id", ids...),
+			),
+		)
+	updateQuery, updateArgs := sbUpdate.Build()
+
+	_, err = tx.Exec(context.TODO(), updateQuery, updateArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 func CloseTask(id uint) error {
 	sb := sqlbuilder.PostgreSQL.NewUpdateBuilder()
 

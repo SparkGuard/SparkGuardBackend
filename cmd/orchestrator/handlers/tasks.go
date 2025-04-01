@@ -42,6 +42,34 @@ func (_ *Server) GetNewTask(ctx context.Context, _ *emptypb.Empty) (*orchestrato
 	return response, nil
 }
 
+func (_ *Server) GetAllNewTasksOfEvent(ctx context.Context, request *orchestrator.GetAllNewTasksOfEventRequest) (result *orchestrator.GetAllNewTasksOfEventResponse, err error) {
+	runner, ok := ctx.Value("runner").(db.Runner)
+
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "runner information is missing from context")
+	}
+
+	tasks, err := db.GetAllTasksFromQueueForRunner(runner.Tag, request.EventID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result = &orchestrator.GetAllNewTasksOfEventResponse{}
+
+	for i := range tasks {
+		result.Task = append(result.Task, &orchestrator.Task{
+			ID:      uint64(tasks[i].ID),
+			EventID: request.EventID,
+			WorkID:  uint64(tasks[i].WorkID),
+			Tag:     tasks[i].Tag,
+			Status:  tasks[i].Status,
+		})
+	}
+
+	return result, nil
+}
+
 func (_ *Server) CloseTask(_ context.Context, request *orchestrator.CloseTaskRequest) (*emptypb.Empty, error) {
 	for _, id := range request.ID {
 		if err := db.CloseTask(uint(id)); err != nil {

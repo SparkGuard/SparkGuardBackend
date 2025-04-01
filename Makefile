@@ -24,3 +24,10 @@ test:
 	docker compose up db -d
 	$(call setup_env)
 	go test -v ./tests/...
+
+build:
+	mkdir bin
+
+	CC="x86_64-linux-musl-gcc" CXX="x86_64-linux-musl-g++" CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags '-w -s -linkmode external -extldflags "-fno-PIC -static"' -o ./bin/rest_build ./cmd/rest
+	CC="x86_64-linux-musl-gcc" CXX="x86_64-linux-musl-g++" CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags '-w -s -linkmode external -extldflags "-fno-PIC -static"' -o ./bin/orchestrator_build ./cmd/orchestrator
+
