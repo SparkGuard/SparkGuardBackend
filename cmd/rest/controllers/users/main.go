@@ -136,7 +136,7 @@ func loginUser(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} auth.Claims
 // @Failure 400
-// @Router /users/login [post]
+// @Router /users/me [get]
 func GetTokenInfo(c *gin.Context) {
 	claims, err := auth.ExtractUserFromToken(c)
 
