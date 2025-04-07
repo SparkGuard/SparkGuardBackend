@@ -37,7 +37,7 @@ const (
 type OrchestratorClient interface {
 	GetRunnerInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetRunnerInfoResponse, error)
 	GetNewTask(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNewTaskResponse, error)
-	GetAllNewTasksOfEvent(ctx context.Context, in *GetAllNewTasksOfEventRequest, opts ...grpc.CallOption) (*GetAllNewTasksOfEventResponse, error)
+	GetAllNewTasksOfEvent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllNewTasksOfEventResponse, error)
 	CloseTask(ctx context.Context, in *CloseTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CloseTaskWithError(ctx context.Context, in *CloseTaskRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetWorksOfEvent(ctx context.Context, in *GetWorksOfEventRequest, opts ...grpc.CallOption) (*GetWorksOfEventResponse, error)
@@ -74,7 +74,7 @@ func (c *orchestratorClient) GetNewTask(ctx context.Context, in *emptypb.Empty, 
 	return out, nil
 }
 
-func (c *orchestratorClient) GetAllNewTasksOfEvent(ctx context.Context, in *GetAllNewTasksOfEventRequest, opts ...grpc.CallOption) (*GetAllNewTasksOfEventResponse, error) {
+func (c *orchestratorClient) GetAllNewTasksOfEvent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllNewTasksOfEventResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAllNewTasksOfEventResponse)
 	err := c.cc.Invoke(ctx, Orchestrator_GetAllNewTasksOfEvent_FullMethodName, in, out, cOpts...)
@@ -150,7 +150,7 @@ func (c *orchestratorClient) SendDefaultReport(ctx context.Context, in *SendDefa
 type OrchestratorServer interface {
 	GetRunnerInfo(context.Context, *emptypb.Empty) (*GetRunnerInfoResponse, error)
 	GetNewTask(context.Context, *emptypb.Empty) (*GetNewTaskResponse, error)
-	GetAllNewTasksOfEvent(context.Context, *GetAllNewTasksOfEventRequest) (*GetAllNewTasksOfEventResponse, error)
+	GetAllNewTasksOfEvent(context.Context, *emptypb.Empty) (*GetAllNewTasksOfEventResponse, error)
 	CloseTask(context.Context, *CloseTaskRequest) (*emptypb.Empty, error)
 	CloseTaskWithError(context.Context, *CloseTaskRequest) (*emptypb.Empty, error)
 	GetWorksOfEvent(context.Context, *GetWorksOfEventRequest) (*GetWorksOfEventResponse, error)
@@ -173,7 +173,7 @@ func (UnimplementedOrchestratorServer) GetRunnerInfo(context.Context, *emptypb.E
 func (UnimplementedOrchestratorServer) GetNewTask(context.Context, *emptypb.Empty) (*GetNewTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNewTask not implemented")
 }
-func (UnimplementedOrchestratorServer) GetAllNewTasksOfEvent(context.Context, *GetAllNewTasksOfEventRequest) (*GetAllNewTasksOfEventResponse, error) {
+func (UnimplementedOrchestratorServer) GetAllNewTasksOfEvent(context.Context, *emptypb.Empty) (*GetAllNewTasksOfEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllNewTasksOfEvent not implemented")
 }
 func (UnimplementedOrchestratorServer) CloseTask(context.Context, *CloseTaskRequest) (*emptypb.Empty, error) {
@@ -252,7 +252,7 @@ func _Orchestrator_GetNewTask_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _Orchestrator_GetAllNewTasksOfEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllNewTasksOfEventRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func _Orchestrator_GetAllNewTasksOfEvent_Handler(srv interface{}, ctx context.Co
 		FullMethod: Orchestrator_GetAllNewTasksOfEvent_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrchestratorServer).GetAllNewTasksOfEvent(ctx, req.(*GetAllNewTasksOfEventRequest))
+		return srv.(OrchestratorServer).GetAllNewTasksOfEvent(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

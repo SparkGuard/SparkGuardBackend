@@ -42,17 +42,21 @@ func (_ *Server) GetNewTask(ctx context.Context, _ *emptypb.Empty) (*orchestrato
 	return response, nil
 }
 
-func (_ *Server) GetAllNewTasksOfEvent(ctx context.Context, request *orchestrator.GetAllNewTasksOfEventRequest) (result *orchestrator.GetAllNewTasksOfEventResponse, err error) {
+func (_ *Server) GetAllNewTasksOfEvent(ctx context.Context, _ *emptypb.Empty) (result *orchestrator.GetAllNewTasksOfEventResponse, err error) {
 	runner, ok := ctx.Value("runner").(db.Runner)
 
 	if !ok {
 		return nil, status.Error(codes.InvalidArgument, "runner information is missing from context")
 	}
 
-	tasks, err := db.GetAllTasksFromQueueForRunner(runner.Tag, request.EventID)
+	tasks, eventID, err := db.GetAllTasksFromQueueForRunner(runner.Tag)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if len(tasks) == 0 {
+		return nil, nil
 	}
 
 	result = &orchestrator.GetAllNewTasksOfEventResponse{}
@@ -60,7 +64,7 @@ func (_ *Server) GetAllNewTasksOfEvent(ctx context.Context, request *orchestrato
 	for i := range tasks {
 		result.Task = append(result.Task, &orchestrator.Task{
 			ID:      uint64(tasks[i].ID),
-			EventID: request.EventID,
+			EventID: uint64(eventID),
 			WorkID:  uint64(tasks[i].WorkID),
 			Tag:     tasks[i].Tag,
 			Status:  tasks[i].Status,

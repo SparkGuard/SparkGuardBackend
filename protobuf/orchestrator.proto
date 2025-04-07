@@ -22,10 +22,6 @@ message GetRunnerInfoResponse {
   Runner runner = 1;
 }
 
-message GetWorksOfEventRequest {
-  uint64 eventID = 1;
-}
-
 message GetWorksOfEventResponse {
   repeated uint64 workID = 1;
 }
@@ -94,7 +90,7 @@ service Orchestrator {
   rpc GetRunnerInfo(google.protobuf.Empty) returns (GetRunnerInfoResponse);
 
   rpc GetNewTask(google.protobuf.Empty) returns (GetNewTaskResponse);
-  rpc GetAllNewTasksOfEvent(GetAllNewTasksOfEventRequest) returns (GetAllNewTasksOfEventResponse);
+  rpc GetAllNewTasksOfEvent(google.protobuf.Empty) returns (GetAllNewTasksOfEventResponse);
   rpc CloseTask(CloseTaskRequest) returns (google.protobuf.Empty);
   rpc CloseTaskWithError(CloseTaskRequest) returns (google.protobuf.Empty);
 

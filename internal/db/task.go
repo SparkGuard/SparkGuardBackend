@@ -150,19 +150,19 @@ func GetTaskFromQueueForRunner(tag string) (*Task, error) {
 	return &task, nil
 }
 
-func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) {
+func GetAllTasksFromQueueForRunner(tag string) ([]*Task, uint, error) {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
-	sb.Select("tasks.id", "tasks.work_id", "tasks.tag", "tasks.status").
+	sb.Select("tasks.id", "tasks.work_id", "tasks.tag", "tasks.status", "works.event_id").
 		From("tasks").
+		JoinWithOption(sqlbuilder.InnerJoin, "works", "tasks.work_id = works.id").
 		Where(
 			sb.And(
 				sb.Equal("tasks.tag", tag),
 				sb.Equal("tasks.status", "In queue"),
-				sb.Equal("works.event_id", eventID),
 			),
 		).
-		JoinWithOption(sqlbuilder.InnerJoin, "works", "tasks.work_id = works.id").
+		Limit(1).
 		SQL("FOR UPDATE SKIP LOCKED") // Ensure rows are locked for the transaction
 
 	selectQuery, selectArgs := sb.Build()
@@ -170,14 +170,15 @@ func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) 
 	// Begin a new transaction
 	conn, err := pgx.Connect(context.TODO(), connectionString)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer conn.Close(context.TODO())
 
 	tx, err := conn.Begin(context.TODO())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+
 	// Ensure we rollback the transaction if an error occurs
 	defer func() {
 		if err != nil {
@@ -191,9 +192,33 @@ func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) 
 		}
 	}()
 
-	rows, err := tx.Query(context.TODO(), selectQuery, selectArgs...)
+	row := tx.QueryRow(context.TODO(), selectQuery, selectArgs...)
+	var eventID uint
+	firstTask := Task{}
+	if err = row.Scan(&firstTask.ID, &firstTask.WorkID, &firstTask.Tag, &firstTask.Status, &eventID); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, 0, ErrNotFound
+		}
+		return nil, 0, err
+	}
+
+	// Fetch all tasks of the same event
+	sbAll := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	sbAll.Select("tasks.id", "tasks.work_id", "tasks.tag", "tasks.status").
+		From("tasks").
+		JoinWithOption(sqlbuilder.InnerJoin, "works", "tasks.work_id = works.id").
+		Where(
+			sbAll.And(
+				sbAll.Equal("works.event_id", eventID),
+				sbAll.Equal("tasks.status", "In queue"),
+			),
+		).
+		SQL("FOR UPDATE SKIP LOCKED")
+
+	selectAllQuery, selectAllArgs := sbAll.Build()
+	rows, err := tx.Query(context.TODO(), selectAllQuery, selectAllArgs...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer func() {
 		rows.Close()
@@ -204,7 +229,7 @@ func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) 
 	for rows.Next() {
 		task := Task{}
 		if err = rows.Scan(&task.ID, &task.WorkID, &task.Tag, &task.Status); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		tasks = append(tasks, &task)
@@ -212,27 +237,22 @@ func GetAllTasksFromQueueForRunner(tag string, eventID uint64) ([]*Task, error) 
 	}
 
 	if len(tasks) == 0 {
-		return nil, ErrNotFound
+		return nil, 0, ErrNotFound
 	}
 
 	// Lock all tasks by updating their status to "In work"
 	sbUpdate := sqlbuilder.PostgreSQL.NewUpdateBuilder()
 	sbUpdate.Update("tasks").
 		Set(sbUpdate.Assign("status", "In work")).
-		Where(
-			sbUpdate.And(
-				sbUpdate.Equal("work_id", eventID),
-				sbUpdate.In("id", ids...),
-			),
-		)
+		Where(sbUpdate.In("id", ids...))
 	updateQuery, updateArgs := sbUpdate.Build()
 
 	_, err = tx.Exec(context.TODO(), updateQuery, updateArgs...)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return tasks, nil
+	return tasks, eventID, nil
 }
 
 func CloseTask(id uint) error {
