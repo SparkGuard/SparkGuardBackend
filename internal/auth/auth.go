@@ -32,10 +32,10 @@ func GenerateJWT(userID uint, email string, AccessLevel string) (string, error) 
 	return token.SignedString(jwtSecret)
 }
 
-func ExtractUserFromToken(c *gin.Context) (uint, error) {
+func ExtractUserFromToken(c *gin.Context) (*Claims, error) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		return 0, errors.New("no authorization header")
+		return nil, errors.New("no authorization header")
 	}
 
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
@@ -44,13 +44,13 @@ func ExtractUserFromToken(c *gin.Context) (uint, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return 0, errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
-	return claims.UserID, nil
+	return claims, nil
 }

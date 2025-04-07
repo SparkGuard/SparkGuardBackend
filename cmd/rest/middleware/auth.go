@@ -8,10 +8,10 @@ import (
 )
 
 func AuthMiddleware(c *gin.Context) {
-	var userID uint
+	var userClaims *auth.Claims
 	var err error
 
-	if userID, err = auth.ExtractUserFromToken(c); err != nil {
+	if userClaims, err = auth.ExtractUserFromToken(c); err != nil {
 		c.AbortWithStatusJSON(401, basic.DefaultErrorResponse{
 			Message: "unauthorized",
 			Error:   err.Error(),
@@ -19,7 +19,7 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	user, err := db.GetUser(userID)
+	user, err := db.GetUser(userClaims.UserID)
 
 	if err != nil {
 		c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})

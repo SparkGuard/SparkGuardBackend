@@ -128,6 +128,26 @@ func loginUser(c *gin.Context) {
 	})
 }
 
+// @Summary Get token info
+// @Description Get token info
+// @Security		ApiKeyAuth
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} auth.Claims
+// @Failure 400
+// @Router /users/login [post]
+func GetTokenInfo(c *gin.Context) {
+	claims, err := auth.ExtractUserFromToken(c)
+
+	if err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	c.JSON(http.StatusOK, *claims)
+}
+
 func SetupControllers(r *gin.Engine) {
 	users := r.Group("/users")
 	{
@@ -135,5 +155,6 @@ func SetupControllers(r *gin.Engine) {
 		users.POST("/", middleware.AuthMiddleware, middleware.AdminMiddleware, createUser)
 		users.GET("/:id", middleware.AuthMiddleware, getUser)
 		users.POST("/login", loginUser)
+		users.GET("/me", middleware.AuthMiddleware, GetTokenInfo)
 	}
 }
