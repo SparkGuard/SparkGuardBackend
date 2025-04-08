@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 func SetupControllers(r *gin.Engine) {
@@ -20,6 +22,7 @@ func SetupControllers(r *gin.Engine) {
 	r.DELETE("/works/:id", middleware.TeacherMiddleware, deleteWork)
 	r.PUT("/works/:id/upload", uploadWork)
 	r.GET("/works/:id/download", downloadWork)
+	r.GET("/works/:id/adoptions/download", downloadWorkAdoptionSegments)
 }
 
 // @Summary Retrieves all works
@@ -343,4 +346,57 @@ func downloadWork(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, response)
 	}
+}
+
+// downloadWorkAdoptionSegments downloads a zip archive containing all related adoption segments for a work.
+// @Summary Download all related adoption segments
+// @Description Retrieves all adoptions related to the specified work (including recursive relations) and packages their file segments into a downloadable zip archive. Each file in the archive contains metadata followed by the segment content.
+// @Security		ApiKeyAuth
+// @Tags Works
+// @Param id path uint true "Work ID"
+// @Produce application/zip
+// @Success 200 {string} byte "A zip archive containing adoption segments"
+// @Failure 400 {object} basic.DefaultErrorResponse "Invalid work ID"
+// @Failure 404 {object} basic.DefaultErrorResponse "Work or related adoptions not found"
+// @Failure 500 {object} basic.DefaultErrorResponse "Internal server error during processing or S3 interaction"
+// @Router /works/{id}/adoptions/download [get]
+func downloadWorkAdoptionSegments(c *gin.Context) {
+	workIDStr := c.Param("id")
+	workID, err := strconv.ParseUint(workIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid work ID format"})
+		return
+	}
+
+	relatedAdoptions, err := db.GetRelatedAdoptions(uint(workID))
+	if err != nil {
+		log.Printf("ERROR: Failed to retrieve related adoptions for work %d: %v", workID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve related adoptions"})
+		return
+	}
+
+	outputFilename := fmt.Sprintf("work_%d_adoptions.zip", workID)
+
+	if len(relatedAdoptions) == 0 {
+		log.Printf("INFO: No related adoptions found for work %d. Returning empty archive.", workID)
+		c.Header("Content-Type", "application/zip")
+		c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, outputFilename))
+		emptyZip := createEmptyZip()
+		c.Data(http.StatusOK, "application/zip", emptyZip.Bytes())
+		return
+	}
+
+	processor := NewSegmentProcessor()
+
+	archiveBuffer, err := createAdoptionsArchive(relatedAdoptions, processor)
+	if err != nil {
+		log.Printf("ERROR: Failed to create adoptions archive for work %d: %v", workID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate the archive"})
+		return
+	}
+
+	log.Printf("INFO: Successfully generated archive '%s' for work %d with %d segments.", outputFilename, workID, len(relatedAdoptions))
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, outputFilename))
+	c.Data(http.StatusOK, "application/zip", archiveBuffer.Bytes())
 }
