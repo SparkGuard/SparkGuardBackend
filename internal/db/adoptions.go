@@ -61,8 +61,8 @@ func EditAdoption(adoption *Adoption) error {
 	return err
 }
 
-// GetAdoptionsByWork retrieves all adoptions for a specific work
-func GetAdoptionsByWork(workID uint) ([]*Adoption, error) {
+// GetWorkAdoptions retrieves all adoptions for a specific work
+func GetWorkAdoptions(workID uint) ([]*Adoption, error) {
 	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
 	sb.Select("id", "work_id", "path", "part_offset", "part_size", "refers_to", "similarity_score", "is_ai_generated", "verdict", "description").
@@ -93,18 +93,23 @@ func GetAdoptionsByWork(workID uint) ([]*Adoption, error) {
 func GetRelatedAdoptions(workID uint) ([]*Adoption, error) {
 	query := `
 	WITH RECURSIVE related_adoptions AS (
-	    SELECT id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description
-	    FROM adoptions
-	    WHERE work_id = $1
-
-	    UNION ALL
-
-	    SELECT t.id, t.work_id, t.path, t.part_offset, t.part_size, t.refers_to, t.similarity_score, t.is_ai_generated, t.verdict, t.description
-	    FROM adoptions t
-	    INNER JOIN related_adoptions ra
-	        ON t.work_id = ra.refers_to OR t.refers_to = ra.id
+		SELECT
+			id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description,
+			ARRAY[id] AS visited_ids
+		FROM adoptions
+		WHERE work_id = $1
+	
+		UNION ALL
+	
+		SELECT
+			t.id, t.work_id, t.path, t.part_offset, t.part_size, t.refers_to, t.similarity_score, t.is_ai_generated, t.verdict, t.description,
+			ra.visited_ids || t.id -- Добавляем текущую запись в массив посещенных
+		FROM adoptions t
+		INNER JOIN related_adoptions ra
+			ON (t.id = ra.refers_to OR t.refers_to = ra.id)
+		WHERE NOT (t.id = ANY(ra.visited_ids)) -- Исключаем циклы
 	)
-	SELECT id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description
+	SELECT DISTINCT id, work_id, path, part_offset, part_size, refers_to, similarity_score, is_ai_generated, verdict, description
 	FROM related_adoptions;
 	`
 

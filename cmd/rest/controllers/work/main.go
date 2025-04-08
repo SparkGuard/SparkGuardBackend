@@ -388,7 +388,7 @@ func downloadWorkAdoptionSegments(c *gin.Context) {
 
 	processor := NewSegmentProcessor()
 
-	archiveBuffer, err := createAdoptionsArchive(relatedAdoptions, processor)
+	archiveBuffer, err := createAdoptionsArchive(relatedAdoptions, workID, processor)
 	if err != nil {
 		log.Printf("ERROR: Failed to create adoptions archive for work %d: %v", workID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate the archive"})

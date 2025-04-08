@@ -50,8 +50,10 @@ func (sp *SegmentProcessor) GetSegmentData(adoption *db.Adoption) (*segmentData,
 		return nil, fmt.Errorf("adoption ID %d: failed to read source archive for work %d: %w", adoption.ID, segmentWorkID, err)
 	}
 
+	*adoption.Path = strings.ReplaceAll(*adoption.Path, "\\", "/")
+
 	for _, file := range zipReader.File {
-		if file.Name == *adoption.Path {
+		if strings.ReplaceAll(file.Name, "\\", "/") == *adoption.Path {
 			if file.FileInfo().IsDir() {
 				return nil, fmt.Errorf("adoption ID %d: path '%s' is a directory", adoption.ID, *adoption.Path)
 			}

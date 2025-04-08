@@ -38,7 +38,7 @@ func GetAdoptionsByWork(c *gin.Context) {
 		return
 	}
 
-	adoptions, err := db.GetAdoptionsByWork(uint(workID))
+	adoptions, err := db.GetWorkAdoptions(uint(workID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve adoptions"})
 		return
