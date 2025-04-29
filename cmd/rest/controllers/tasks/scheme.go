@@ -11,5 +11,5 @@ type TaskResponse struct {
 }
 
 type WorkTasksRequest struct {
-	WorkID uint `uri:"work_id" binding:"required"`
+	WorkID uint `uri:"id" binding:"required"`
 }

@@ -10,7 +10,7 @@ import (
 func SetupControllers(r *gin.Engine) {
 	r.GET("/tasks", middleware.AdminMiddleware, GetTasks)
 	r.GET("/tasks/:id", middleware.AdminMiddleware, GetTask)
-	r.GET("/works/:work_id/tasks", middleware.AdminMiddleware, GetTasksByWorkID)
+	r.GET("/works/:id/tasks", middleware.AdminMiddleware, GetTasksByWorkID)
 	r.PUT("/tasks/:id/reset", middleware.AdminMiddleware, ResetTask)
 }
 
