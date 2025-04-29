@@ -9,3 +9,7 @@ type TaskRequest struct {
 type TaskResponse struct {
 	Task db.Task `json:"task"`
 }
+
+type WorkTasksRequest struct {
+	WorkID uint `uri:"work_id" binding:"required"`
+}

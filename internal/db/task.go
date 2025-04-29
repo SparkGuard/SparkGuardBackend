@@ -297,3 +297,39 @@ func ResetTask(id uint) error {
 	_, err := db.Exec(query, args...)
 	return err
 }
+
+// GetTasksByWorkID returns all tasks associated with a specific work_id
+func GetTasksByWorkID(workID uint) ([]*Task, error) {
+	sb := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	sb.Select("id", "work_id", "tag", "status").
+		From("tasks").
+		Where(sb.Equal("work_id", workID))
+
+	query, args := sb.Build()
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
+
+	tasks := make([]*Task, 0)
+
+	for rows.Next() {
+		task := Task{}
+
+		if err = rows.Scan(&task.ID, &task.WorkID, &task.Tag, &task.Status); err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, &task)
+	}
+
+	return tasks, nil
+}

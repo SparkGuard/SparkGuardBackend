@@ -10,6 +10,7 @@ import (
 func SetupControllers(r *gin.Engine) {
 	r.GET("/tasks", middleware.AdminMiddleware, GetTasks)
 	r.GET("/tasks/:id", middleware.AdminMiddleware, GetTask)
+	r.GET("/works/:work_id/tasks", middleware.AdminMiddleware, GetTasksByWorkID)
 	r.PUT("/tasks/:id/reset", middleware.AdminMiddleware, ResetTask)
 }
 
@@ -85,4 +86,32 @@ func ResetTask(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// GetTasksByWorkID retrieves all tasks associated with a specific work
+// @Summary Get tasks by work ID
+// @Description Get all tasks associated with a specific work
+// @Security		ApiKeyAuth
+// @Tags tasks
+// @Produce json
+// @Param work_id path int true "Work ID"
+// @Success 200 {array} db.Task
+// @Failure 400
+// @Failure 500
+// @Router /works/{work_id}/tasks [get]
+func GetTasksByWorkID(c *gin.Context) {
+	var request WorkTasksRequest
+
+	if err := c.ShouldBindUri(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid work ID"})
+		return
+	}
+
+	tasks, err := db.GetTasksByWorkID(request.WorkID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tasks"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
 }
